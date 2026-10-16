@@ -61,7 +61,7 @@ jobs:
         working-directory: web
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: 20
           cache: "pnpm"
@@ -121,7 +121,7 @@ jobs:
         run: |
           echo "VERCEL_TOKEN / VERCEL_ORG_ID / VERCEL_PROJECT_ID não configurados — pulando deploy do web."
           echo "Configurar em Settings > Secrets and variables > Actions (ver docs/DEPLOY_FREE_TIERS.md)."
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         if: steps.check.outputs.has_secrets == 'true'
         with:
           node-version: 20
