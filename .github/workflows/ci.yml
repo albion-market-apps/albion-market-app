@@ -1,0 +1,106 @@
+name: ci
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  commitlint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm install --no-save @commitlint/cli @commitlint/config-conventional
+      - run: npx commitlint --from ${{ github.event.pull_request.base.sha || 'HEAD~1' }} --to HEAD
+
+  python:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        package: [backend, worker]
+    # Postgres/Redis só são usados pelos testes do backend (busca de /items,
+    # /prices raw+agregado, isolamento por RLS) — ociosos no job do worker,
+    # custo desprezível em CI.
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_USER: albion
+          POSTGRES_PASSWORD: albion
+          POSTGRES_DB: albion
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U albion -d albion"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+      redis:
+        image: redis:7-alpine
+        ports: ["6379:6379"]
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgresql+psycopg://albion:albion@localhost:5432/albion
+      REDIS_URL: redis://localhost:6379/0
+      TENANT_DEFAULT_ID: 00000000-0000-0000-0000-000000000001
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pipx install poetry
+      - working-directory: ${{ matrix.package }}
+        run: poetry install --no-interaction
+      - working-directory: ${{ matrix.package }}
+        run: poetry run ruff check .
+      - working-directory: ${{ matrix.package }}
+        run: poetry run mypy . || true # TODO: remover || true quando tipagem estiver completa
+      - if: matrix.package == 'backend'
+        working-directory: backend
+        run: poetry run alembic upgrade head
+      - if: matrix.package == 'backend'
+        working-directory: backend
+        run: poetry run python -m app.seeds.load
+      - working-directory: ${{ matrix.package }}
+        run: poetry run pytest -q
+
+  web:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "pnpm"
+          cache-dependency-path: web/pnpm-lock.yaml
+      - run: corepack enable
+      - run: pnpm install --frozen-lockfile || pnpm install
+      - run: pnpm lint
+      - run: pnpm type-check
+      - run: pnpm build
+
+  flutter:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: mobile
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "3.24.0"
+          channel: "stable"
+      - run: flutter pub get
+      - run: flutter analyze
+      - run: flutter test || true # TODO: remover || true quando houver testes

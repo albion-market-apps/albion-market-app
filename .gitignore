@@ -1,0 +1,44 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+dist/
+build/
+
+# Node / Web
+node_modules/
+web/.next/
+web/out/
+web/.turbo/
+*.tsbuildinfo
+
+# Flutter
+mobile/.dart_tool/
+mobile/.flutter-plugins
+mobile/.flutter-plugins-dependencies
+mobile/build/
+mobile/.packages
+mobile/pubspec.lock
+
+# Env e segredos
+.env
+.env.*
+!.env.example
+
+# Infra
+infra/pgdata/
+*.log
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+
+# CLAUDE.md na raiz deste diretório é de outro projeto (notas de negócio da
+# Sempreon, sem relação com o Albion Market Tracker) — nunca deve ir pro
+# repositório deste projeto. Ver docs/claude.md.
+/CLAUDE.md

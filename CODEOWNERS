@@ -1,0 +1,8 @@
+# Donos padrão de todo o repositório — ajuste para o(s) mantenedor(es) reais.
+* @owner
+
+backend/ @owner
+worker/ @owner
+web/ @owner
+mobile/ @owner
+infra/ @owner

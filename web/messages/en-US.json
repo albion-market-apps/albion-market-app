@@ -1,0 +1,12 @@
+{
+  "home": {
+    "title": "Hello, Albion Online market",
+    "searchPlaceholder": "Search item (e.g. Master's Broadsword)",
+    "searchButton": "Search",
+    "noResults": "No items found.",
+    "resultsTitle": "Results"
+  },
+  "header": {
+    "localeLabel": "Language"
+  }
+}

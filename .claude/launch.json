@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "job-board-saas",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["--prefix", "/home/usuario/job-board-saas", "run", "dev"],
+      "port": 3000
+    },
+    {
+      "name": "albion-web",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["--dir", "/home/usuario/pessoal-painel/web", "run", "dev"],
+      "port": 3000
+    }
+  ]
+}

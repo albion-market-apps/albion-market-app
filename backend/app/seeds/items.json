@@ -1,0 +1,22 @@
+[
+  { "code": "T3_MAIN_SWORD", "name": "Espada Curta", "tier": 3, "enchant": 0 },
+  { "code": "T4_MAIN_SWORD", "name": "Espada Longa", "tier": 4, "enchant": 0 },
+  { "code": "T4_MAIN_SWORD", "name": "Espada Longa", "tier": 4, "enchant": 1 },
+  { "code": "T5_MAIN_SWORD", "name": "Espada Longa Mestre", "tier": 5, "enchant": 0 },
+  { "code": "T4_2H_BOW", "name": "Arco de Guerra", "tier": 4, "enchant": 0 },
+  { "code": "T5_2H_BOW", "name": "Arco Longo Mestre", "tier": 5, "enchant": 0 },
+  { "code": "T4_MAIN_AXE", "name": "Machado de Batalha", "tier": 4, "enchant": 0 },
+  { "code": "T6_2H_CLAYMORE", "name": "Claymore Especialista", "tier": 6, "enchant": 0 },
+  { "code": "T4_HEAD_PLATE_SET1", "name": "Elmo de Soldado", "tier": 4, "enchant": 0 },
+  { "code": "T4_ARMOR_PLATE_SET1", "name": "Armadura de Soldado", "tier": 4, "enchant": 0 },
+  { "code": "T4_SHOES_PLATE_SET1", "name": "Botas de Soldado", "tier": 4, "enchant": 0 },
+  { "code": "T5_ARMOR_LEATHER_SET1", "name": "Jaqueta de Caçador Mestre", "tier": 5, "enchant": 0 },
+  { "code": "T4_BAG", "name": "Bolsa Adepta", "tier": 4, "enchant": 0 },
+  { "code": "T5_CAPE", "name": "Capa Mestre", "tier": 5, "enchant": 0 },
+  { "code": "T4_OFF_TORCH", "name": "Lanterna", "tier": 4, "enchant": 0 },
+  { "code": "T4_ORE", "name": "Minério de Ferro", "tier": 4, "enchant": 0 },
+  { "code": "T4_WOOD", "name": "Madeira de Carvalho", "tier": 4, "enchant": 0 },
+  { "code": "T4_HIDE", "name": "Couro de Lobo", "tier": 4, "enchant": 0 },
+  { "code": "T4_FIBER", "name": "Fibra de Linho", "tier": 4, "enchant": 0 },
+  { "code": "T4_ROCK", "name": "Pedra Granito", "tier": 4, "enchant": 0 }
+]

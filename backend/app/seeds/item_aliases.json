@@ -1,0 +1,11 @@
+[
+  { "code": "T4_MAIN_SWORD", "enchant": 0, "alias": "Broadsword" },
+  { "code": "T4_MAIN_SWORD", "enchant": 0, "alias": "espada4" },
+  { "code": "T5_MAIN_SWORD", "enchant": 0, "alias": "Claymore Mestre" },
+  { "code": "T5_MAIN_SWORD", "enchant": 0, "alias": "sword5" },
+  { "code": "T4_BAG", "enchant": 0, "alias": "Adept's Bag" },
+  { "code": "T4_BAG", "enchant": 0, "alias": "bagt4" },
+  { "code": "T4_ORE", "enchant": 0, "alias": "Iron Ore" },
+  { "code": "T4_ORE", "enchant": 0, "alias": "minerio" },
+  { "code": "T4_2H_BOW", "enchant": 0, "alias": "Warbow" }
+]

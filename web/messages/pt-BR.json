@@ -1,0 +1,12 @@
+{
+  "home": {
+    "title": "Olá, mercado de Albion Online",
+    "searchPlaceholder": "Buscar item (ex: Espada Longa Mestre)",
+    "searchButton": "Buscar",
+    "noResults": "Nenhum item encontrado.",
+    "resultsTitle": "Resultados"
+  },
+  "header": {
+    "localeLabel": "Idioma"
+  }
+}
