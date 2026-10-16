@@ -1,4 +1,4 @@
-.PHONY: dev down logs docker-up docker-down migrate seed seed-items-cities fmt test test-api verify-env
+.PHONY: dev down logs docker-up docker-down migrate seed seed-items-cities fmt test test-api verify-env verify-separation
 
 dev: docker-up
 
@@ -44,3 +44,9 @@ test-api:
 ENV_FILE ?= .env
 verify-env:
 	python3 scripts/check_env.py $(ENV_FILE)
+
+# Mostra o checklist de separação (docs/SEPARATION.md) — NÃO verifica nada
+# automaticamente: confirmar org/billing/2FA separados exige estar logado
+# no GitHub/Vercel, o que este Makefile (e o Claude) não faz por você.
+verify-separation:
+	@cat docs/SEPARATION.md
