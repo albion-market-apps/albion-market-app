@@ -1,0 +1,137 @@
+name: cd
+
+# Deploy condicional pros free tiers (Render + Vercel). Sem os secrets
+# configurados no repositório, os jobs de deploy só registram que estão
+# pulando e terminam com sucesso — não falham o pipeline. Configurar os
+# secrets é um passo manual do usuário (Settings → Secrets and variables →
+# Actions); ver docs/DEPLOY_FREE_TIERS.md para o passo a passo completo.
+#
+# Secrets esperados:
+#   RENDER_API_KEY, RENDER_SERVICE_ID_API, RENDER_SERVICE_ID_WORKER
+#   VERCEL_TOKEN, VERCEL_ORG_ID, VERCEL_PROJECT_ID
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_USER: albion
+          POSTGRES_PASSWORD: albion
+          POSTGRES_DB: albion
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U albion -d albion"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+      redis:
+        image: redis:7-alpine
+        ports: ["6379:6379"]
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      DATABASE_URL: postgresql+psycopg://albion:albion@localhost:5432/albion
+      REDIS_URL: redis://localhost:6379/0
+      TENANT_DEFAULT_ID: 00000000-0000-0000-0000-000000000001
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pipx install poetry
+      - working-directory: backend
+        run: poetry install --no-interaction
+      - working-directory: backend
+        run: poetry run alembic upgrade head
+      - working-directory: backend
+        run: poetry run python -m app.seeds.load
+      - working-directory: backend
+        run: poetry run pytest -q
+
+  build-web:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "pnpm"
+          cache-dependency-path: web/pnpm-lock.yaml
+      - run: corepack enable
+      - run: pnpm install --frozen-lockfile || pnpm install
+      - run: pnpm build
+
+  deploy-render:
+    needs: [test]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checa se os secrets do Render estão configurados
+        id: check
+        run: |
+          if [ -n "${{ secrets.RENDER_API_KEY }}" ] && [ -n "${{ secrets.RENDER_SERVICE_ID_API }}" ]; then
+            echo "has_secrets=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_secrets=false" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Skipping deploy (no secrets)
+        if: steps.check.outputs.has_secrets == 'false'
+        run: |
+          echo "RENDER_API_KEY / RENDER_SERVICE_ID_API não configurados — pulando deploy da API/worker."
+          echo "Configurar em Settings > Secrets and variables > Actions (ver docs/DEPLOY_FREE_TIERS.md)."
+      - name: Deploy API (Render)
+        if: steps.check.outputs.has_secrets == 'true'
+        run: |
+          curl -fsS -X POST "https://api.render.com/v1/services/${{ secrets.RENDER_SERVICE_ID_API }}/deploys" \
+            -H "Authorization: Bearer ${{ secrets.RENDER_API_KEY }}" \
+            -H "Content-Type: application/json"
+      - name: Deploy worker (Render)
+        if: steps.check.outputs.has_secrets == 'true' && secrets.RENDER_SERVICE_ID_WORKER != ''
+        run: |
+          curl -fsS -X POST "https://api.render.com/v1/services/${{ secrets.RENDER_SERVICE_ID_WORKER }}/deploys" \
+            -H "Authorization: Bearer ${{ secrets.RENDER_API_KEY }}" \
+            -H "Content-Type: application/json"
+
+  deploy-vercel:
+    needs: [build-web]
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v4
+      - name: Checa se os secrets da Vercel estão configurados
+        id: check
+        run: |
+          if [ -n "${{ secrets.VERCEL_TOKEN }}" ] && [ -n "${{ secrets.VERCEL_ORG_ID }}" ] && [ -n "${{ secrets.VERCEL_PROJECT_ID }}" ]; then
+            echo "has_secrets=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_secrets=false" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Skipping deploy (no secrets)
+        if: steps.check.outputs.has_secrets == 'false'
+        run: |
+          echo "VERCEL_TOKEN / VERCEL_ORG_ID / VERCEL_PROJECT_ID não configurados — pulando deploy do web."
+          echo "Configurar em Settings > Secrets and variables > Actions (ver docs/DEPLOY_FREE_TIERS.md)."
+      - uses: actions/setup-node@v4
+        if: steps.check.outputs.has_secrets == 'true'
+        with:
+          node-version: 20
+      - name: Deploy (Vercel CLI)
+        if: steps.check.outputs.has_secrets == 'true'
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+        run: |
+          npx vercel pull --yes --environment=production --token="$VERCEL_TOKEN"
+          npx vercel build --prod --token="$VERCEL_TOKEN"
+          npx vercel deploy --prebuilt --prod --token="$VERCEL_TOKEN"

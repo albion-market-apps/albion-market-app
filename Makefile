@@ -1,19 +1,23 @@
-.PHONY: dev down logs migrate seed seed-items-cities fmt test test-api
+.PHONY: dev down logs docker-up docker-down migrate seed seed-items-cities fmt test test-api verify-env
 
-dev:
+dev: docker-up
+
+docker-up:
 	docker compose -f infra/docker-compose.yml up -d --build
 
-down:
+down: docker-down
+
+docker-down:
 	docker compose -f infra/docker-compose.yml down
 
 logs:
 	docker compose -f infra/docker-compose.yml logs -f
 
 migrate:
-	docker compose -f infra/docker-compose.yml exec api poetry run alembic upgrade head
+	./scripts/migrate.sh
 
 seed:
-	docker compose -f infra/docker-compose.yml exec api poetry run python -m app.seeds.load
+	./scripts/seed.sh
 
 # Alias explícito para o seed de cidades+itens+aliases — hoje é o mesmo script
 # de `make seed` (tenant default + cidades + catálogo); existe como alvo
@@ -34,3 +38,9 @@ test:
 # container da API já de pé via `make dev`.
 test-api:
 	docker compose -f infra/docker-compose.yml exec api poetry run pytest -q tests/
+
+# Valida o .env antes de subir a stack (dev) ou configurar um deploy (prod).
+# Uso: make verify-env  |  make verify-env ENV_FILE=env/.env.example.prod
+ENV_FILE ?= .env
+verify-env:
+	python3 scripts/check_env.py $(ENV_FILE)

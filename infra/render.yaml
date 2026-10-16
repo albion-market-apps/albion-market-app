@@ -1,0 +1,46 @@
+# Render Blueprint — cria os serviços `albion-api` (web, com healthcheck) e
+# `albion-worker` (background worker) a partir dos Dockerfiles já usados no
+# Compose local. Valores com `sync: false` precisam ser preenchidos no
+# dashboard do Render (nunca commitados aqui) — ver docs/DEPLOY_FREE_TIERS.md.
+#
+# Uso: Render → New → Blueprint → aponta pro repo → ele lê este arquivo.
+# TODO: ainda não testado contra uma conta Render real (sem acesso neste
+# ambiente) — revisar nomes/plano gratuito ("free") se o Render mudar algo.
+
+services:
+  - type: web
+    name: albion-api
+    runtime: docker
+    plan: free
+    dockerfilePath: ./infra/backend.Dockerfile
+    dockerContext: .
+    healthCheckPath: /health
+    envVars:
+      - key: DATABASE_URL
+        sync: false # Neon — ver env/.env.example.prod
+      - key: REDIS_URL
+        sync: false # Upstash — ver env/.env.example.prod
+      - key: TENANT_DEFAULT_ID
+        sync: false # gerar uma vez, nunca trocar depois do primeiro seed
+      - key: API_RATE_LIMIT
+        value: "60"
+      - key: ALBION_BASE_URL
+        value: https://www.albion-online-data.com/api/v2/stats
+      - key: SENTRY_DSN
+        sync: false
+
+  - type: worker
+    name: albion-worker
+    runtime: docker
+    plan: free
+    dockerfilePath: ./infra/worker.Dockerfile
+    dockerContext: .
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: REDIS_URL
+        sync: false
+      - key: TENANT_DEFAULT_ID
+        sync: false
+      - key: ALBION_BASE_URL
+        value: https://www.albion-online-data.com/api/v2/stats

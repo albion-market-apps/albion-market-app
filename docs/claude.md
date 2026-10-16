@@ -206,16 +206,104 @@ não está plugado — ver Fase 1), a resposta de `/prices` vem com `data: []`.
   em uma base grande de itens (hoje usa `ILIKE` + índice btree simples).
 - i18n mobile/web: revisar textos conforme telas reais forem criadas.
 
-**Fase 3 (deploy free tier) — bloqueada neste ambiente, ver changelog turno 3**
-- Web → Vercel; API/worker → VPS com Docker Compose (ou Fly.io/Render free
-  tier); Postgres → Neon/Supabase; Redis → Upstash.
-- Sentry real (`SENTRY_DSN` já está no `.env.example`, só falta integrar o
-  SDK).
-- Requer do usuário: Docker instalado (ou sudo pra eu instalar), `gh` CLI
-  autenticado (ou um Personal Access Token), e login nas contas Neon/
-  Upstash/Render/Vercel — nenhum dos quatro está disponível neste ambiente
-  de execução. Ver "Changelog de setup (turno 3)" para o que foi tentado e
-  o que falta pra desbloquear.
+**Fase 3 (deploy free tier) — documentado e automatizado, não executado**
+- Guia completo: [docs/DEPLOY_FREE_TIERS.md](DEPLOY_FREE_TIERS.md) (Neon →
+  Upstash → Render → Vercel → Cloudflare, nessa ordem).
+- `infra/render.yaml` (Blueprint do Render pra `albion-api`+`albion-worker`),
+  `web/vercel.json`, `.github/workflows/cd.yml` (deploy condicional — roda
+  testes/build sempre, só pula o deploy em si se os secrets não estiverem
+  configurados) já estão no repo — ver changelog do turno 4.
+- Continua exigindo do usuário: login nas contas Neon/Upstash/Render/Vercel
+  (OAuth que eu não posso fazer por ele) e, pra push automático, um GitHub
+  remoto configurado. Nada disso foi executado — só preparado.
+- Sentry real (`SENTRY_DSN` já está no `.env.example`/`env/.env.example.*`,
+  só falta integrar o SDK no código).
+
+## Changelog de setup (turno 4 — docs e automação de deploy, sem executar login/deploy)
+
+**Objetivo do turno**: depois que o turno 3 confirmou que Docker, `gh` CLI e
+contas Neon/Upstash/Render/Vercel não estão disponíveis neste ambiente, o
+usuário pediu pra eu **não** tentar contornar isso — em vez disso, preparar
+toda a documentação e automação pra que ele (ou uma sessão futura já logada)
+consiga rodar localmente e fazer o deploy sem precisar descobrir nada do
+zero. Nenhum login, `git push` ou deploy real foi executado neste turno.
+
+**Criados**
+- [docs/LOCAL_SETUP.md](LOCAL_SETUP.md) — instalar Docker (Windows/macOS/
+  Linux), configurar `.env`, subir a stack, migrar/seed, testar API e web,
+  seção de erros comuns (porta em uso, erro de RLS, `.env` não lido, etc. —
+  os dois últimos são os bugs reais que eu mesmo bati no turno 3).
+- [docs/DEPLOY_FREE_TIERS.md](DEPLOY_FREE_TIERS.md) — passo a passo Neon →
+  Upstash → Render (via `infra/render.yaml`) → Vercel (via `web/vercel.json`)
+  → Cloudflare (opcional), nessa ordem, com checklist de pós-deploy.
+- [docs/SECRETS.md](SECRETS.md) — tabela de toda variável/segredo por
+  ambiente (dev, prod, GitHub Actions) e onde cada uma é setada.
+- `env/.env.example.dev` e `env/.env.example.prod` — templates sem valores
+  reais; o de prod documenta inline o formato esperado de cada provedor
+  (ex.: Neon exige `?sslmode=require`, Upstash usa `rediss://`).
+- `scripts/wait_for_db.sh`, `scripts/migrate.sh`, `scripts/seed.sh` —
+  encapsulam o que antes estava inline no Makefile; suportam `RUN_LOCAL=1`
+  pra rodar via Poetry direto no host (útil pra migrar/seed contra um Neon
+  remoto sem precisar subir o container `api`).
+- `scripts/check_env.py` — valida um `.env` sem depender de nada além da
+  stdlib (roda antes mesmo de `poetry install`). Testado com o `.env` real
+  do turno 3 (passa) e com os valores *literais* que o pedido original do
+  turno 2 sugeria (`psycopg2`, `60/m`, UUID inválido — pega os 3 problemas
+  corretamente, igual ao que achei manualmente no turno 3).
+- `infra/render.yaml` — Blueprint do Render com os dois serviços
+  (`albion-api` web + `albion-worker` background), healthcheck `/health`,
+  envs sensíveis marcadas `sync: false`. **Não testado contra uma conta
+  Render real** (sem acesso) — só validado como YAML sintaticamente válido.
+- `web/vercel.json` — mínimo (`framework`, `buildCommand`, `installCommand`);
+  sem rewrites próprios porque o proxy pra API já é feito em
+  `web/next.config.js` via `API_BASE_URL` — duplicar em `vercel.json`
+  criaria duas fontes de verdade pro mesmo rewrite.
+- `.github/workflows/cd.yml` — roda testes de integração (com services
+  postgres+redis, igual ao `ci.yml`) e o build do web em todo push pra
+  `main`; os jobs `deploy-render` e `deploy-vercel` checam se os secrets
+  necessários existem e, se não existirem, imprimem "Skipping deploy (no
+  secrets)" e terminam com sucesso (não quebram o pipeline) — só disparam o
+  deploy de verdade se os secrets estiverem configurados (ver
+  `docs/SECRETS.md`).
+
+**Alterados**
+- `Makefile`: `migrate`/`seed` agora chamam `scripts/migrate.sh`/
+  `scripts/seed.sh` (que por sua vez esperam o Postgres ficar pronto antes
+  de rodar — `scripts/wait_for_db.sh`) em vez de ter o `docker compose exec`
+  inline; `dev`/`down` viraram aliases de `docker-up`/`docker-down` (nomes
+  pedidos no turno); novo alvo `verify-env` (roda `scripts/check_env.py`).
+- `docs/claude.md` (este arquivo) — seção "Próximos passos > Fase 3"
+  atualizada pra refletir que o deploy está documentado/automatizado, não
+  executado.
+
+**Verificado neste turno** (sem Docker/contas disponíveis, mesmas
+limitações do turno 3):
+- `bash -n` em todos os `.sh` novos → sintaxe ok.
+- `python3 scripts/check_env.py .env` contra o `.env` real (gerado no turno
+  3) → todos os campos `OK`.
+- `python3 scripts/check_env.py` contra um `.env` com os valores *literais*
+  do pedido original (`psycopg2://`, `TENANT_DEFAULT_ID=not-a-uuid`,
+  `API_RATE_LIMIT=60/m`) → 3 `FALHA` + 1 `AVISO`, exit code 1 — confirma que
+  o script bloqueia exatamente os problemas reais encontrados no turno 3.
+- `.github/workflows/cd.yml`, `infra/render.yaml`, `web/vercel.json` →
+  parseados com `yaml.safe_load`/`json.load` sem erro (só sintaxe — não dá
+  pra validar semanticamente sem uma conta Render/Vercel real).
+- `make verify-env` → roda o alvo novo do Makefile corretamente.
+
+**Não verificado** (seguem as mesmas limitações do turno 3): o
+`render.yaml` nunca foi de fato importado num projeto Render; o
+`cd.yml` nunca rodou de verdade no GitHub Actions (precisa do repo lá);
+`web/vercel.json` nunca passou por um build real da Vercel.
+
+**Git**: nada mudou aqui além dos arquivos novos — ainda é só o commit
+local do turno 3 (`59977e6`); este turno ainda não foi commitado (ver
+mensagem sugerida abaixo). Repositório remoto continua não criado.
+
+**Mensagem de commit sugerida (turno 4)**
+
+```
+docs: add local setup and free-tier deploy guides + scripts and CD scaffolding
+```
 
 ## Changelog de setup (turno 3 — validação e2e, deploy prep)
 
