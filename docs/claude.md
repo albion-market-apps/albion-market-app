@@ -219,10 +219,23 @@ não está plugado — ver Fase 1), a resposta de `/prices` vem com `data: []`.
 - Sentry real (`SENTRY_DSN` já está no `.env.example`/`env/.env.example.*`,
   só falta integrar o SDK no código).
 
-## GitHub + Vercel (organização, repositório remoto, team)
+## GitHub + Vercel/Netlify (organização, repositório remoto, deploy do web)
 
-Status: **GitHub pronto**; **Vercel pausado** (ver changelog turno 6 — Team
-não tem plano free de verdade, decisão de pagamento fica com o usuário).
+Status: **GitHub pronto**; **Vercel abandonado** (Team não tem plano free
+de verdade — nem Vercel, nem Netlify); **Netlify como alternativa free,
+site criado, falta só 1 passo manual** (ver changelog turno 7).
+
+- Web: site Netlify **`albion-web`** criado via conector MCP (já
+  autenticado, sem login) na team pessoal existente do usuário
+  (`nickavelino` — mesma team que hospeda sites da Sempreon; sem risco de
+  billing porque é tudo free, só não é separado por team).
+  URL: http://albion-web.netlify.app (ainda sem deploy).
+  **Falta**: ligar o repositório GitHub no site — passo manual, só o
+  usuário pode autorizar a integração. Ver "Próximo passo" no changelog
+  turno 7.
+  `netlify.toml` na raiz configura o monorepo (`base = "web"`,
+  `@netlify/plugin-nextjs`); `NEXT_PUBLIC_API_BASE_URL` (placeholder) já
+  setado como env var do site.
 
 - Organização GitHub: **criada** — [github.com/albion-market-apps](https://github.com/albion-market-apps)
   (`albion-market` original estava ocupado por terceiros — não relacionado;
@@ -262,6 +275,66 @@ não tem plano free de verdade, decisão de pagamento fica com o usuário).
 - [ ] Team Vercel próprio, billing separado — **pausado** (ver acima).
 - [ ] Recursos de produção (Neon/Upstash/Render/Vercel) nunca compartilhados
       com outro projeto do mantenedor — pendente (depende do Vercel acima).
+
+## Changelog de setup (turno 7 — alternativa free ao Vercel: Netlify)
+
+**Pedido do turno**: "encontrar uma alternativa free para teste", depois
+que o turno 6 pausou o Vercel por falta de plano free pra Team.
+
+**O que descobri**
+- Netlify tem um conector MCP **já autenticado** nesta sessão
+  (`mcp__3aa8d94a...`) — nenhum login necessário, diferente de toda a
+  novela de Vercel/GitHub nos turnos anteriores.
+- Achei por padrão que Netlify teria times novas gratuitas de verdade
+  (diferente da Vercel) — **o usuário testou e não é o caso**: criar uma
+  team nova no Netlify também pede plano pago. Registrando aqui pra não
+  repetir essa suposição errada depois.
+- A única team existente (`nickavelino`, Personal, free) já hospeda sites
+  da Sempreon (`sempreontech.com.br`, `recruithub.com.br` via
+  `job-board-sempreon`) — mesmo padrão do Vercel (conta pessoal
+  pré-existente misturada com outros projetos do mantenedor).
+
+**Decisão (confirmada em chat pelo usuário)**: criar o site `albion-web`
+**dentro da team existente** `nickavelino`, não numa team nova. Justificativa:
+é tudo free ali (sem cobrança), então "separação" nesse caso é só
+organizacional (nome/domínio do site), não financeira — risco bem menor do
+que pagar/testar um Pro Trial da Vercel só pra conseguir uma team separada.
+
+**O que fiz** (via conector MCP, sem navegador — `create-new-project` e
+`manage-env-vars` são chamadas de API autenticadas, diferente de clicar em
+"Create Team"/"Create organization", que são ações de criação de conta que
+eu não faço mesmo com conector disponível):
+- `netlify-project-services-updater` → `create-new-project` (name:
+  `albion-web`, teamSlug: `nickavelino`) → site criado, id
+  `b417fcbc-809d-4b0c-8339-48e4ea130d7c`, URL
+  http://albion-web.netlify.app (sem deploy ainda — normal, site criado
+  sem repo linkado).
+- `netlify-project-services-updater` → `manage-env-vars` → setei
+  `NEXT_PUBLIC_API_BASE_URL=https://api.exemplo.com` (placeholder, mesmo
+  valor que já estava planejado pra Vercel em `docs/DEPLOY_FREE_TIERS.md`).
+- Criei `netlify.toml` na raiz do repo: `base = "web"` (monorepo),
+  `command = "pnpm build"`, plugin `@netlify/plugin-nextjs`.
+- Adicionei `.netlify/` ao `.gitignore` (toda vez que um site é linkado, o
+  Netlify grava `.netlify/state.json` localmente — nunca deve ir pro git;
+  regra tirada direto do skill de deploy do conector).
+- Commit + push (`f1b57ba`).
+
+**Por que não terminei sozinho**: ligar o repositório GitHub ao site
+(`Git CD`) é feito via OAuth2 ou instalação do Netlify GitHub App — mesma
+categoria de ação do "autorizar integração GitHub↔Vercel" que já tinha
+ficado pro usuário nos turnos anteriores. As ferramentas de escrita do
+conector Netlify disponíveis não incluem uma operação de "linkar repo"
+(só `update-visitor-access-controls`, `update-forms`,
+`manage-form-submissions`, `update-project-name`, `manage-env-vars`,
+`create-new-project`) — não é escolha minha, a integração com Git
+realmente só existe pelo fluxo de autorização na UI.
+
+**Próximo passo (usuário)**: abrir
+[app.netlify.com/projects/albion-web/configuration/deploys](https://app.netlify.com/projects/albion-web/configuration/deploys)
+→ "Link repository" → GitHub → autorizar acesso ao repositório
+`albion-market-apps/albion-market-app` → confirmar branch `main` e base
+directory `web` (já vem do `netlify.toml`, mas a UI pode pedir
+confirmação). Depois disso o primeiro deploy dispara sozinho.
 
 ## Changelog de setup (turno 6 — org/repo criados, branch protection testada, Vercel pausado)
 
