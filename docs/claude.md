@@ -221,21 +221,20 @@ não está plugado — ver Fase 1), a resposta de `/prices` vem com `data: []`.
 
 ## GitHub + Vercel/Netlify (organização, repositório remoto, deploy do web)
 
-Status: **GitHub pronto**; **Vercel abandonado** (Team não tem plano free
-de verdade — nem Vercel, nem Netlify); **Netlify como alternativa free,
-site criado, falta só 1 passo manual** (ver changelog turno 7).
+Status: **GitHub pronto**; **web no ar** via Netlify (Vercel abandonado —
+nenhuma das duas tem Team free de verdade). API/worker ainda não
+deployados em lugar nenhum (fase seguinte).
 
-- Web: site Netlify **`albion-web`** criado via conector MCP (já
-  autenticado, sem login) na team pessoal existente do usuário
-  (`nickavelino` — mesma team que hospeda sites da Sempreon; sem risco de
-  billing porque é tudo free, só não é separado por team).
-  URL: http://albion-web.netlify.app (ainda sem deploy).
-  **Falta**: ligar o repositório GitHub no site — passo manual, só o
-  usuário pode autorizar a integração. Ver "Próximo passo" no changelog
-  turno 7.
+- Web: **[albion-web.netlify.app](https://albion-web.netlify.app) no ar**,
+  deploy automático a cada push em `main` (Git CD configurado). Repo
+  **público** (decisão do usuário — Netlify Starter free não deploya repo
+  privado de org; só público ou de conta pessoal). GitHub App do Netlify
+  instalado na org com acesso restrito só a este repo (menor privilégio).
   `netlify.toml` na raiz configura o monorepo (`base = "web"`,
   `@netlify/plugin-nextjs`); `NEXT_PUBLIC_API_BASE_URL` (placeholder) já
-  setado como env var do site.
+  setado como env var do site. Detalhe completo da novela (Vercel sem
+  Team free → Netlify sem Team free → Netlify sem deploy de repo privado
+  de org → repo público resolveu) nos changelogs turnos 7 e 8.
 
 - Organização GitHub: **criada** — [github.com/albion-market-apps](https://github.com/albion-market-apps)
   (`albion-market` original estava ocupado por terceiros — não relacionado;
@@ -275,6 +274,61 @@ site criado, falta só 1 passo manual** (ver changelog turno 7).
 - [ ] Team Vercel próprio, billing separado — **pausado** (ver acima).
 - [ ] Recursos de produção (Neon/Upstash/Render/Vercel) nunca compartilhados
       com outro projeto do mantenedor — pendente (depende do Vercel acima).
+
+## Changelog de setup (turno 8 — albion-web no ar via Netlify)
+
+**Pedido do turno**: terminar de ligar o repositório ao site Netlify que
+ficou pendente no turno 7, com o usuário navegando/autorizando e eu
+clicando só quando ele confirmasse cada etapa.
+
+**Sequência completa** (cada clique de autorização/pagamento foi do
+usuário; eu naveguei, preenchi campos e cliquei nos passos intermediários):
+1. Usuário logou no Netlify neste navegador (login com GitHub).
+2. Cliquei em "Link repository" → "Link to an existing repository" →
+   trocar pra conta `NickAvelino` não achou o repo (ele é da org).
+3. Troquei pro contexto da org `albion-market-apps` no seletor — **a org
+   não aparecia na lista** porque o app do Netlify no GitHub só tinha
+   acesso à conta pessoal, não à org nova.
+4. Fui direto em `github.com/apps/netlify/installations/new` → usuário
+   clicou "albion-market-apps" → **restringi a permissão pra "Only select
+   repositories" → só `albion-market-app`** (menor privilégio, era um dos
+   pedidos originais) → usuário clicou "Install" (autorização dele).
+5. Voltei pro fluxo de link do Netlify → repo apareceu, mas marcado
+   **"Private"** → ao selecionar, **novo bloqueio real**: "Upgrade to Pro
+   to unlock the ability to deploy private GitHub repositories owned by an
+   Organization" ($20/mês). Netlify Starter (free) não deploya repo
+   **privado de organização**, só de conta pessoal ou repo público —
+   achado na hora, não documentado antes. Não cliquei em "Upgrade"; pedi
+   confirmação ao usuário.
+6. Usuário confirmou deixar o repo **público permanentemente** (antes só
+   tínhamos testado público/privado temporariamente, pro teste de branch
+   protection do turno 6) — mesmo fluxo de "Change visibility" de sempre,
+   clique final dele.
+7. Repo público → voltei no Netlify → `albion-market-app` agora aparecia
+   como "Public" → selecionei → **tela 3 (Configure project and deploy)
+   abriu sem pedir upgrade**. `netlify.toml` já tinha sido lido (build
+   command `pnpm build`, publish `.next`); preenchi "Base directory" =
+   `web` manualmente (veio em branco, apesar do `netlify.toml` ter `base
+   = "web"` — por segurança, melhor deixar explícito nos dois lugares).
+8. Botão final "Deploy albion-market-app" — perguntei, usuário confirmou
+   ("sim, pode clicar"), cliquei.
+9. Build rodou **3min02s** (pnpm install + next build via plugin
+   `@netlify/plugin-nextjs`, detectado automaticamente) — **sucesso**, 1
+   function deployada (SSR do Next.js), 7 assets, 3 redirect rules, 1
+   header rule, tudo sem erro.
+
+**Resultado**: [albion-web.netlify.app](https://albion-web.netlify.app)
+no ar, servindo a Home real (pt-BR, "Olá, mercado de Albion Online").
+Busca de itens não retorna nada — esperado, a API ainda não está deployada
+em lugar nenhum (só roda local via `make dev`), é o próximo passo de
+infra, não um bug deste deploy.
+
+**Lição pra registrar**: "free de verdade" em PaaS modernos tem limites
+nem sempre óbvios até você tentar — GitHub Free cobre org + branch
+protection só em repo público; Vercel não tem Team free (só trial/pago);
+Netlify não tem team nova free *nem* deploy de repo privado de org no
+Starter. Cada um desses só apareceu testando de verdade, não dava pra
+prever todos de antemão.
 
 ## Changelog de setup (turno 7 — alternativa free ao Vercel: Netlify)
 
