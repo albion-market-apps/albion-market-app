@@ -219,6 +219,74 @@ não está plugado — ver Fase 1), a resposta de `/prices` vem com `data: []`.
 - Sentry real (`SENTRY_DSN` já está no `.env.example`/`env/.env.example.*`,
   só falta integrar o SDK no código).
 
+## GitHub + Vercel (organização, repositório remoto, team)
+
+Status: **nada criado ainda** — ver changelog do turno 5 pra por quê, e o
+runbook que o usuário precisa rodar antes de eu poder seguir.
+
+- Organização GitHub: `albion-market` **já existe** (de terceiros, uma
+  comunidade de Discord sobre o jogo — nada a ver com este projeto).
+  Alternativas livres confirmadas: `albion-market-dev`, `albion-market-apps`.
+  Nome final: **a confirmar com o usuário**.
+- Repositório remoto: não criado (depende da org acima existir).
+- Team Vercel "Albion Market": não criado.
+- Projeto Vercel "albion-web": não criado (depende do repo e do team).
+
+### Checklist de separação (ver [docs/SEPARATION.md](SEPARATION.md))
+
+- [ ] Organização GitHub própria, billing separado — **pendente**
+- [ ] Team Vercel próprio, billing separado — **pendente**
+- [ ] Recursos de produção (Neon/Upstash/Render/Vercel) nunca compartilhados
+      com outro projeto do mantenedor — pendente (depende do acima)
+
+## Changelog de setup (turno 5 — org/repo/team: verificado o que dava, resto bloqueado por política)
+
+**Pedido do turno**: criar org no GitHub, times, repo remoto com proteções
+de branch/Dependabot/Secret Scanning/Environments, um Team na Vercel com
+billing separado e a integração GitHub↔Vercel autorizada.
+
+**O que fiz** (ações só de leitura, sem login, sem criar nada):
+- Confirmei que **não estou logado** nem no GitHub nem na Vercel neste
+  navegador (nunca estive — o navegador embutido é isolado, sem sessões
+  salvas).
+- Checei a disponibilidade do nome `albion-market` como organização GitHub
+  (`github.com/albion-market` — página pública, sem precisar de login):
+  **já existe**, é uma organização de terceiros (link de Discord sobre o
+  jogo, sem repositórios/membros públicos) — não relacionada a este
+  projeto. `albion-market-dev` e `albion-market-apps` retornam 404 (livres).
+- Criei [docs/SEPARATION.md](SEPARATION.md) localmente, com o checklist de
+  separação — vai junto no próximo push.
+
+**O que NÃO fiz, de propósito, mesmo pedido explicitamente**:
+- Criar a organização no GitHub, os times (`owners`/`maintainers`/
+  `developers`), configurar 2FA obrigatório, criar o repositório,
+  branch protection, Environments, habilitar Dependabot/Secret Scanning.
+- Criar o Team "Albion Market" na Vercel, autorizar a integração GitHub↔Vercel,
+  preparar a importação do projeto `albion-web`.
+
+Motivo: isso cai em duas categorias que ficam fora dos meus limites mesmo
+com pedido explícito e detalhado — **criar contas** (uma organização GitHub
+e um Team Vercel são, na prática, contas novas com billing próprio) e
+**alterar configurações de segurança** (2FA obrigatório, branch protection,
+Dependabot, Secret Scanning, autorização de integração OAuth). Essas regras
+não têm exceção por pedido explícito — a instrução correta nesse caso é
+explicar e pedir pro usuário fazer essa parte ele mesmo. Não é uma questão
+de 2FA interromper um fluxo automatizado (o pedido já antecipava isso); a
+barreira é categórica, antes mesmo de chegar numa tela de 2FA.
+
+**O que eu posso fazer assim que o usuário tiver feito a parte dele**:
+- Depois que a org existir e o repositório remoto (vazio) estiver criado:
+  rodar `git remote add origin ... && git push -u origin main` com os dois
+  commits já prontos localmente (ver changelog turnos 3 e 4) — isso
+  substitui a etapa 6 do pedido (criar README/ci.yml/CODEOWNERS/SEPARATION.md
+  via UI do GitHub): já temos tudo isso **de verdade** no repo local, não
+  precisa de placeholder.
+- Ajudar a preencher os campos do formulário de import do projeto na
+  Vercel (Root Directory `web`, framework, build/install command, env
+  placeholder) **enquanto o usuário estiver logado e presente** — eu não
+  crio o projeto sozinho, mas posso navegar e preencher campos com ele
+  acompanhando, confirmando antes de qualquer clique que crie/publique algo.
+
 ## Changelog de setup (turno 4 — docs e automação de deploy, sem executar login/deploy)
 
 **Objetivo do turno**: depois que o turno 3 confirmou que Docker, `gh` CLI e
