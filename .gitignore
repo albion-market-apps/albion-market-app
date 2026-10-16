@@ -33,6 +33,10 @@ mobile/pubspec.lock
 infra/pgdata/
 *.log
 
+# Netlify — gravado por qualquer comando que linka/cria o site (CLI ou MCP),
+# nunca deve ser commitado.
+.netlify/
+
 # IDE / OS
 .vscode/
 .idea/

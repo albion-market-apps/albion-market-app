@@ -1,0 +1,11 @@
+# Config do site "albion-web" (Netlify) — monorepo, Next.js vive em web/.
+# Alternativa free de teste à Vercel (ver docs/claude.md — Vercel Team não
+# tem plano free de verdade, só Pro Trial/Pro pago).
+
+[build]
+  base = "web"
+  command = "pnpm build"
+  publish = ".next"
+
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
