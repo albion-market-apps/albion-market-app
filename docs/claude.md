@@ -275,6 +275,41 @@ deployados em lugar nenhum (fase seguinte).
 - [ ] Recursos de produção (Neon/Upstash/Render/Vercel) nunca compartilhados
       com outro projeto do mantenedor — pendente (depende do Vercel acima).
 
+## Changelog de setup (turno 9 — bug real: nome errado da env var da API)
+
+**Pedido do turno**: usuário reportou que a busca no site publicado não
+funciona.
+
+**Diagnóstico**: `GET /api/items` no site publicado retorna `500`. Causa:
+`web/next.config.js` lê `process.env.API_BASE_URL` (sem prefixo) pro
+rewrite server-side, mas no turno 7/8 eu configurei a env var do site
+Netlify como **`NEXT_PUBLIC_API_BASE_URL`** (copiei o nome do que estava
+planejado originalmente pra Vercel, sem checar contra o código real) —
+nome errado, nunca ia funcionar, com ou sem API publicada por trás.
+
+**Causa raiz adicional**: a API em si **ainda não está publicada em lugar
+nenhum** — só roda local via `make dev`. Então mesmo com o nome certo da
+env var, a busca continuaria sem funcionar até o backend ter uma URL
+pública real (Render, ver `docs/DEPLOY_FREE_TIERS.md`) — isso não é um bug,
+é a próxima etapa de infra que ainda não foi feita.
+
+**Corrigido**:
+- Env var do site Netlify: deletei `NEXT_PUBLIC_API_BASE_URL`, criei
+  `API_BASE_URL` (mesmo valor placeholder) via conector MCP.
+- `env/.env.example.prod`, `docs/SECRETS.md`, `docs/DEPLOY_FREE_TIERS.md`:
+  corrigido o nome da variável documentada + nota explícita sobre o motivo
+  do nome importar (server-side rewrite, sem prefixo `NEXT_PUBLIC_`).
+  `docs/DEPLOY_FREE_TIERS.md` também atualizado pra descrever o fluxo
+  Netlify real (que foi o que aconteceu) em vez do fluxo Vercel original
+  (abandonado).
+- **Não reescrevi** os changelogs dos turnos 7/8 — eles registram
+  corretamente o que eu de fato fiz naquele momento (inclusive o erro);
+  manter o histórico como aconteceu, não como deveria ter sido.
+
+**Ainda pendente**: deploy público da API (Render) + atualizar
+`API_BASE_URL` no Netlify com a URL real — só aí a busca volta a funcionar
+no site publicado.
+
 ## Changelog de setup (turno 8 — albion-web no ar via Netlify)
 
 **Pedido do turno**: terminar de ligar o repositório ao site Netlify que

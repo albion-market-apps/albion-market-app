@@ -22,7 +22,7 @@ Dentro dos containers `api`/`worker` do Compose, `DATABASE_URL`/`REDIS_URL`
 vêm direto de `infra/docker-compose.yml` (`environment:` do serviço), não
 do `.env` — ver nota em `docs/claude.md` (turno 3).
 
-## Produção (Render + Vercel)
+## Produção (Render + web)
 
 | Variável                     | Onde setar                          | Fonte |
 |-------------------------------|--------------------------------------|-------|
@@ -32,7 +32,7 @@ do `.env` — ver nota em `docs/claude.md` (turno 3).
 | `API_RATE_LIMIT`              | Render → `albion-api`                | inteiro, ex. `60` |
 | `SENTRY_DSN`                  | Render → `albion-api` e `albion-worker` (opcional) | DSN do projeto Sentry |
 | `ALBION_BASE_URL`             | Render → `albion-api` e `albion-worker` | `https://www.albion-online-data.com/api/v2/stats` |
-| `NEXT_PUBLIC_API_BASE_URL`    | Vercel → Project → Environment Variables | URL pública do serviço `albion-api` no Render |
+| `API_BASE_URL`                | Vercel/Netlify → Project → Environment Variables | URL pública do serviço `albion-api` no Render. **Nome exato importa**: `web/next.config.js` lê `API_BASE_URL`, **sem** prefixo `NEXT_PUBLIC_` (o rewrite roda no servidor) — usar o nome errado (`NEXT_PUBLIC_API_BASE_URL`) faz a busca falhar com 500 sem aviso nenhum. Bug real que caiu nisso no turno 9, ver `docs/claude.md`. |
 
 `infra/render.yaml` já declara essas chaves (com `sync: false` pros
 sensíveis) — o Render pede os valores na tela de criação do Blueprint.

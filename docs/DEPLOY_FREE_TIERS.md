@@ -62,21 +62,42 @@ exige `cd backend && poetry install` uma vez antes.)
 5. Plano free do Render "dorme" depois de inatividade — a primeira request
    depois disso demora alguns segundos (cold start). Não é bug.
 
-## 4. Web — Vercel (Hobby, free)
+## 4. Web — Netlify (free), não Vercel
 
-1. Crie uma conta em https://vercel.com, conecte o GitHub.
-2. **Add New → Project** → selecione o repositório `albion-market-app`.
-3. Em **Root Directory**, selecione `web` (o monorepo tem o Next.js dentro
-   de `web/`, não na raiz — `web/vercel.json` já está configurado, mas o
-   Root Directory precisa ser setado manualmente no dashboard).
-4. Em **Environment Variables**, adicione `NEXT_PUBLIC_API_BASE_URL` com a
-   URL do Render do passo 3 (ex.: `https://albion-api.onrender.com`) — e
-   ajuste `web/next.config.js` se quiser usá-la no lugar de `API_BASE_URL`
-   atual (hoje o proxy usa `API_BASE_URL`, sem o prefixo `NEXT_PUBLIC_`,
-   porque o rewrite roda no servidor; `NEXT_PUBLIC_API_BASE_URL` só é
-   necessário se algum componente cliente precisar chamar a API direto).
-5. Deploy. Confirme a tela inicial abrindo e a busca funcionando contra a
-   API do Render.
+**Mudança de plano registrada no turno 7/8**: Vercel não tem Team com plano
+free de verdade (só Pro Trial ou Pro pago) — abandonado. Fomos de Netlify,
+que também não tem Team nova free, mas permite deploy direto na conta
+pessoal existente do usuário (sem custo, só sem separação de billing — ver
+`docs/claude.md`). Site real: https://albion-web.netlify.app.
+
+1. Login no Netlify com GitHub.
+2. No site (`albion-web` já existe) → **Project configuration → Developer
+   settings → Repository → Link repository** → GitHub → autorizar.
+   - Se a organização do repo não aparecer na lista de contas: o GitHub
+     App do Netlify precisa ser instalado/autorizado pra ela também —
+     `github.com/apps/netlify/installations/new`, escolher a org, **"Only
+     select repositories"** (menor privilégio) → só o repo do projeto.
+   - **Netlify Starter (free) não deploya repositório privado de
+     organização** — só público, ou privado de conta pessoal. Se o repo
+     for privado de org, ou ele fica público, ou o deploy pede upgrade
+     pra Pro ($20/mês). Decisão de visibilidade é sempre do usuário.
+3. `web/netlify.toml` já configura `base = "web"`, `pnpm build`, plugin
+   `@netlify/plugin-nextjs` — no passo "Configure project and deploy",
+   confirme "Base directory" = `web` (às vezes vem em branco mesmo com o
+   `netlify.toml` certo).
+4. Em **Environment variables**, adicione `API_BASE_URL` (não
+   `NEXT_PUBLIC_API_BASE_URL`!) com a URL do Render do passo 3. **Nome
+   importa**: `web/next.config.js` lê `process.env.API_BASE_URL` — o
+   rewrite roda no servidor, nunca precisa do prefixo `NEXT_PUBLIC_`. Usar
+   o nome errado faz `/api/*` responder 500 sem nenhum aviso claro — bug
+   real que aconteceu no turno 9, só percebido testando a busca de verdade
+   no site publicado.
+5. "Deploy" dispara o build (Git CD fica configurado — todo push em `main`
+   que mexe em `web/` builda e publica de novo automaticamente).
+
+Se algum dia a separação de billing via Team passar a importar de verdade
+(ex.: o projeto crescer), reavaliar Vercel Pro ou Netlify com Team paga —
+por ora, free com conta pessoal é a decisão vigente.
 
 ## 5. DNS/CDN — Cloudflare (opcional, free)
 

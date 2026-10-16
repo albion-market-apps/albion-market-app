@@ -24,10 +24,14 @@ mobile/build/
 mobile/.packages
 mobile/pubspec.lock
 
-# Env e segredos
+# Env e segredos. O padrão .env.* também pegava env/.env.example.* sem eu
+# perceber (turnos 4-9) — esses nunca foram commitados de verdade até o
+# turno 9 corrigir isso. Sempre conferir com `git ls-files` depois de mexer
+# aqui, "git status" sozinho não mostra arquivo ignorado como pendente.
 .env
 .env.*
 !.env.example
+!env/.env.example.*
 
 # Infra
 infra/pgdata/
