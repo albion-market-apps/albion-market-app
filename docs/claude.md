@@ -283,6 +283,48 @@ turno 10); é só um stub por enquanto, não bloqueia o MVP.
 - [ ] Recursos de produção (Neon/Upstash/Render/Vercel) nunca compartilhados
       com outro projeto do mantenedor — pendente (depende do Vercel acima).
 
+## Changelog de setup (turno 14 — bug real: recomendação mandava comprar e vender na mesma cidade)
+
+**Pedido do turno**: usuário mandou print da Calculadora de Lucro pro
+"Machado de Batalha — T4" mostrando "Compre em Bridgewatch por 2.500 ·
+Venda em Bridgewatch por 1.207" — comprar e vender **na mesma cidade**,
+sem nenhum sentido (e com prejuízo na cara).
+
+**Causa raiz**: `best_trade_for_item` (`app/services/opportunities.py`) e a
+lógica equivalente no front (`item-detail-view.tsx`) escolhiam a cidade
+mais barata pra comprar e a cidade com melhor oferta de compra **de forma
+independente** — cada uma otimizando só o próprio lado. Quando uma única
+cidade acontece de ter os dois extremos ao mesmo tempo (o caso real do
+print: Bridgewatch tinha o menor `sell_price_min` E o maior
+`buy_price_max` pra esse item), as duas escolhas "empatavam" na mesma
+cidade — resultado sem sentido nenhum (comprar e "vender" no mesmo lugar
+não é arbitragem, é só prejuízo, já que `buy_price_max` de uma cidade é
+tipicamente menor que o próprio `sell_price_min` dela por causa do spread
+do mercado).
+
+**Corrigido**: trocado o cálculo "melhor compra + melhor venda
+independentes" por uma **busca exaustiva sobre todos os pares (cidade de
+compra, cidade de venda) com cidades obrigatoriamente diferentes**,
+maximizando o lucro do par — barato de fazer (no máximo 7 cidades, ≤42
+pares). Aplicado nos dois lugares que tinham a mesma lógica duplicada:
+- `backend/app/services/opportunities.py::best_trade_for_item` (usado por
+  `/opportunities/favorites` e `/opportunities/best-from-city`).
+- `web/src/app/(pages)/item-detail-view.tsx` (`findBestTrade`, usado pela
+  tabela de comparação e pela calculadora de lucro) — mesmo algoritmo do
+  backend, pra calculadora e API nunca se contradizerem.
+
+**Teste de regressão** (`backend/tests/test_opportunities.py::
+test_best_trade_never_buys_and_sells_in_the_same_city`): reproduz o
+cenário exato do bug (uma cidade com os dois extremos ao mesmo tempo) e
+confirma que a resposta agora escolhe duas cidades diferentes, mesmo que o
+lucro resultante seja menor do que o número (sem sentido) que o bug
+mostraria.
+
+**Validado localmente**: `tsc --noEmit` e `pnpm lint` limpos; `python3 -m
+py_compile` limpo. Sem Postgres/Docker neste ambiente pra rodar os testes
+de integração do backend — verificação final contra o deploy real, como
+sempre.
+
 ## Changelog de setup (turno 13 — catálogo maior e comparação de refino)
 
 **Pedido do turno**: usuário reportou que buscar "machado" só achava 1

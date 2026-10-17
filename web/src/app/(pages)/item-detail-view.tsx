@@ -13,6 +13,36 @@ import {
 } from "@/lib/api";
 import { MAX_FAVORITES } from "@/lib/favorites";
 
+type CityPriceRow = { city: City; price: PriceRaw };
+
+/** Melhor par (cidade de compra, cidade de venda) maximizando o lucro —
+ * **sempre cidades diferentes**. Comprar e "vender" na mesma cidade não é
+ * arbitragem nenhuma (sem viagem, não tem razão pra tratar compra e venda
+ * como lugares separados — e normalmente dá prejuízo garantido, porque
+ * `buy_price_max` de uma cidade costuma ser menor que o próprio
+ * `sell_price_min` dela, por causa do spread do mercado). Busca exaustiva
+ * sobre os pares — no máximo 7 cidades, O(n²) é barato — em vez de
+ * escolher a cidade mais barata pra comprar e a melhor pra vender de forma
+ * independente, que pode "empatar" na mesma cidade mesmo quando outra
+ * combinação daria mais lucro (bug real: ver docs/claude.md, turno 14).
+ * Mesmo algoritmo usado no backend (`app/services/opportunities.py`),
+ * pra calculadora e badges nunca contradizerem a API. */
+function findBestTrade(
+  rows: CityPriceRow[],
+): { buy: CityPriceRow; sell: CityPriceRow; profit: number } | null {
+  let best: { buy: CityPriceRow; sell: CityPriceRow; profit: number } | null = null;
+  for (const buy of rows) {
+    for (const sell of rows) {
+      if (buy.city.id === sell.city.id) continue;
+      const profit = sell.price.buy_price_max - buy.price.sell_price_min;
+      if (!best || profit > best.profit) {
+        best = { buy, sell, profit };
+      }
+    }
+  }
+  return best;
+}
+
 export function ItemDetailView({
   item,
   isFavorite,
@@ -38,9 +68,9 @@ export function ItemDetailView({
     .filter((row): row is { city: City; price: PriceRaw } => row.price !== null)
     .sort((a, b) => a.price.sell_price_min - b.price.sell_price_min);
 
-  const cheapestToBuy = rows[0] ?? null;
-  const bestToSell =
-    rows.length > 0 ? [...rows].sort((a, b) => b.price.buy_price_max - a.price.buy_price_max)[0] : null;
+  const bestTrade = findBestTrade(rows);
+  const cheapestToBuy = bestTrade?.buy ?? null;
+  const bestToSell = bestTrade?.sell ?? null;
 
   const favoriteDisabled = !isFavorite && !canAddFavorite;
 

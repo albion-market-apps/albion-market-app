@@ -1,6 +1,10 @@
+from datetime import UTC, datetime
+
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
+from app.db.rls import set_tenant
+from app.services.pricing import record_prices
 from tests.conftest import TENANT_A, seed_prices
 
 
@@ -84,8 +88,10 @@ def test_best_from_city_excludes_negative_profit(
 ) -> None:
     _seed_cheap_and_expensive_city(db, world)
 
-    # Comprar na cidade cara (city_a2) e vender na melhor oferta do mercado
-    # (também city_a2, 890) dá prejuízo (900 > 890) — não deve aparecer.
+    # Comprar na cidade cara (city_a2, 900) só pode vender na outra cidade
+    # (city_a, buy_price_max=90 — vender em city_a2 de novo não vale, ver
+    # test_best_trade_never_buys_and_sells_in_the_same_city) — 90 < 900,
+    # prejuízo garantido, não deve aparecer.
     response = client.get(
         "/opportunities/best-from-city",
         params={"city_id": str(world["city_a2"])},
@@ -93,3 +99,65 @@ def test_best_from_city_excludes_negative_profit(
     )
     assert response.status_code == 200
     assert response.json() == []
+
+
+def test_best_trade_never_buys_and_sells_in_the_same_city(
+    client: TestClient, db: Session, world: dict
+) -> None:
+    """Bug real reportado pelo usuário (turno 14): uma cidade que tem ao
+    mesmo tempo o menor `sell_price_min` E o maior `buy_price_max` virava
+    "compre e venda aqui mesmo" — sem viagem nenhuma, isso não é
+    arbitragem, só prejuízo (ou um "lucro" bobo) disfarçado de
+    oportunidade. `city_a` tem os dois extremos de propósito; a combinação
+    correta precisa ignorar essa coincidência e escolher o melhor par entre
+    cidades DIFERENTES."""
+    now = datetime.now(UTC)
+    with db.begin():
+        set_tenant(db, str(TENANT_A))
+        record_prices(
+            db,
+            TENANT_A,
+            [
+                {
+                    "item_id": world["item_a"],
+                    "city_id": world["city_a"],
+                    "sell_price_min": 100,  # a mais barata pra comprar...
+                    "sell_price_max": 110,
+                    "buy_price_min": 180,
+                    "buy_price_max": 200,  # ...e também a melhor oferta de compra
+                    "quality": 1,
+                    "qty": 0,
+                    "collected_at": now,
+                },
+                {
+                    "item_id": world["item_a"],
+                    "city_id": world["city_a2"],
+                    "sell_price_min": 150,
+                    "sell_price_max": 160,
+                    "buy_price_min": 40,
+                    "buy_price_max": 50,
+                    "quality": 1,
+                    "qty": 0,
+                    "collected_at": now,
+                },
+            ],
+        )
+
+    response = client.get(
+        "/opportunities/favorites",
+        params={"item_ids": str(world["item_a"])},
+        headers=_headers(),
+    )
+    assert response.status_code == 200
+    body = response.json()
+    assert len(body) == 1
+    trade = body[0]
+    # city_a sozinha "pareceria" perfeita (compre a 100, venda a 200) — mas
+    # é a MESMA cidade pros dois lados, não vale. A melhor combinação real
+    # entre cidades diferentes é comprar em city_a2 (150) e vender em
+    # city_a (200): lucro 50 — bem menor que os 100 que o bug mostraria.
+    assert trade["buy_city_id"] == str(world["city_a2"])
+    assert trade["buy_price"] == 150
+    assert trade["sell_city_id"] == str(world["city_a"])
+    assert trade["sell_price"] == 200
+    assert trade["profit"] == 50

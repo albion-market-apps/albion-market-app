@@ -76,15 +76,24 @@ def best_trade_for_item(
     prices_by_city: dict[UUID, dict],
     origin_city_id: UUID | None,
 ) -> TradeOpportunity | None:
-    """Melhor par (cidade de compra, cidade de venda) pra um item.
+    """Melhor par (cidade de compra, cidade de venda) pra um item — sempre
+    cidades **diferentes**: comprar e "vender" na mesma cidade não é
+    arbitragem nenhuma (se não tem viagem, não tem razão nenhuma pra tratar
+    compra e venda como lugares separados — e normalmente dá prejuízo
+    garantido, porque `buy_price_max` de uma cidade é tipicamente menor que
+    o próprio `sell_price_min` dela, por causa do spread do mercado).
 
-    `origin_city_id=None` deixa a cidade de compra livre (melhor preço de
-    compra entre todas as cidades) — usado na lista de favoritos. Com
+    `origin_city_id=None` deixa a cidade de compra livre (testa todas as
+    combinações possíveis) — usado na lista de favoritos. Com
     `origin_city_id` definido, a compra é travada naquela cidade (o
     usuário já disse onde está) — usado em "melhor item pra comprar daqui".
-    Cidades sem oferta de compra/venda (`== 0`, ver
-    `app.services.collector`: zero significa "sem dado", não preço real)
-    são ignoradas dos dois lados.
+    Busca exaustiva sobre todos os pares (compra, venda) — o catálogo de
+    cidades é pequeno (7), então O(n²) é barato e evita o erro de escolher
+    a melhor cidade de compra e a melhor de venda de forma independente
+    (que pode "empatar" na mesma cidade mesmo quando outra combinação daria
+    mais lucro, ou pior, mais prejuízo). Cidades sem oferta de compra/venda
+    (`== 0`, ver `app.services.collector`: zero significa "sem dado", não
+    preço real) são ignoradas dos dois lados.
     """
     buyable = {c: p for c, p in prices_by_city.items() if p["sell_price_min"] > 0}
     sellable = {c: p for c, p in prices_by_city.items() if p["buy_price_max"] > 0}
@@ -92,31 +101,27 @@ def best_trade_for_item(
     if origin_city_id is not None:
         if origin_city_id not in buyable:
             return None
-        buy_city_id = origin_city_id
+        buy_candidates = {origin_city_id: buyable[origin_city_id]}
     else:
-        if not buyable:
-            return None
-        buy_city_id = min(buyable, key=lambda c: buyable[c]["sell_price_min"])
+        buy_candidates = buyable
 
-    if not sellable:
-        return None
-    sell_city_id = max(sellable, key=lambda c: sellable[c]["buy_price_max"])
-
-    buy_price = buyable[buy_city_id]["sell_price_min"]
-    sell_price = sellable[sell_city_id]["buy_price_max"]
-
-    return TradeOpportunity(
-        item_id=item_id,
-        buy_city_id=buy_city_id,
-        buy_price=buy_price,
-        sell_city_id=sell_city_id,
-        sell_price=sell_price,
-        profit=sell_price - buy_price,
-        collected_at=max(
-            prices_by_city[buy_city_id]["collected_at"],
-            prices_by_city[sell_city_id]["collected_at"],
-        ),
-    )
+    best: TradeOpportunity | None = None
+    for buy_city_id, buy_entry in buy_candidates.items():
+        for sell_city_id, sell_entry in sellable.items():
+            if sell_city_id == buy_city_id:
+                continue
+            profit = sell_entry["buy_price_max"] - buy_entry["sell_price_min"]
+            if best is None or profit > best.profit:
+                best = TradeOpportunity(
+                    item_id=item_id,
+                    buy_city_id=buy_city_id,
+                    buy_price=buy_entry["sell_price_min"],
+                    sell_city_id=sell_city_id,
+                    sell_price=sell_entry["buy_price_max"],
+                    profit=profit,
+                    collected_at=max(buy_entry["collected_at"], sell_entry["collected_at"]),
+                )
+    return best
 
 
 def best_trades_for_items(
