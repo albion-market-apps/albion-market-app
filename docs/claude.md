@@ -221,9 +221,10 @@ não está plugado — ver Fase 1), a resposta de `/prices` vem com `data: []`.
 
 ## GitHub + Vercel/Netlify (organização, repositório remoto, deploy do web)
 
-Status: **GitHub pronto**; **web no ar** via Netlify (Vercel abandonado —
-nenhuma das duas tem Team free de verdade). API/worker ainda não
-deployados em lugar nenhum (fase seguinte).
+Status: **GitHub pronto**; **web no ar** via Netlify; **API no ar** via
+Render (free tier, web service). Worker ainda não deployado em lugar
+nenhum — Render free não tem Background Worker disponível (ver changelog
+turno 10); é só um stub por enquanto, não bloqueia o MVP.
 
 - Web: **[albion-web.netlify.app](https://albion-web.netlify.app) no ar**,
   deploy automático a cada push em `main` (Git CD configurado). Repo
@@ -231,10 +232,17 @@ deployados em lugar nenhum (fase seguinte).
   privado de org; só público ou de conta pessoal). GitHub App do Netlify
   instalado na org com acesso restrito só a este repo (menor privilégio).
   `netlify.toml` na raiz configura o monorepo (`base = "web"`,
-  `@netlify/plugin-nextjs`); `NEXT_PUBLIC_API_BASE_URL` (placeholder) já
-  setado como env var do site. Detalhe completo da novela (Vercel sem
-  Team free → Netlify sem Team free → Netlify sem deploy de repo privado
-  de org → repo público resolveu) nos changelogs turnos 7 e 8.
+  `@netlify/plugin-nextjs`); env var `API_BASE_URL` (nome corrigido no
+  turno 9) apontando pra URL real da API no Render (turno 10). Detalhe
+  completo da novela (Vercel sem Team free → Netlify sem Team free →
+  Netlify sem deploy de repo privado de org → repo público resolveu) nos
+  changelogs turnos 7 e 8.
+- API: **[albion-api-9839.onrender.com](https://albion-api-9839.onrender.com)
+  no ar**, deploy via Blueprint (`infra/render.yaml`) a cada push em `main`
+  que afete `backend/`. Banco Postgres e Redis free do próprio Render.
+  Sem Shell no free tier — migração + seed rodam no boot do container via
+  `backend/entrypoint.sh` (idempotente). Detalhe completo no changelog
+  turno 10.
 
 - Organização GitHub: **criada** — [github.com/albion-market-apps](https://github.com/albion-market-apps)
   (`albion-market` original estava ocupado por terceiros — não relacionado;
@@ -274,6 +282,59 @@ deployados em lugar nenhum (fase seguinte).
 - [ ] Team Vercel próprio, billing separado — **pausado** (ver acima).
 - [ ] Recursos de produção (Neon/Upstash/Render/Vercel) nunca compartilhados
       com outro projeto do mantenedor — pendente (depende do Vercel acima).
+
+## Changelog de setup (turno 10 — deploy da API no Render, busca funcionando de ponta a ponta)
+
+**Pedido do turno**: continuar o que o turno 9 deixou pendente — deploy
+público da API, pra fechar o bug real da busca (env var com nome certo,
+mas sem API publicada atrás dela não tinha como funcionar).
+
+**Render (free tier) via Blueprint** (`infra/render.yaml`, já existia desde
+o turno 4):
+- Serviço `albion-api` (web service) criado a partir do Blueprint. Banco
+  Postgres e Redis criados separadamente no Render (free), credenciais
+  coladas pelo usuário direto no formulário do Blueprint — nunca passaram
+  por mim em texto.
+- **Erro real encontrado**: a connection string do Postgres colada pelo
+  usuário vinha como `postgresql://...` — o código espera o driver
+  explícito (`postgresql+psycopg://...`). Mesma classe de bug de nome de
+  variável/formato que já tinha aparecido antes; identifiquei e pedi pro
+  usuário corrigir o campo ele mesmo (não editei credencial em nome dele).
+- **Limitação real do free tier**: `albion-worker` (Background Worker) —
+  "service type is not available for this plan". Não dá pra contornar
+  sem upgrade. Como o worker ainda é um stub (collector não implementado,
+  ver TODO em `worker/worker_app/collector.py`), não bloqueia o MVP; só
+  registrar que o worker não tem onde rodar em produção ainda.
+- **Erro real encontrado**: primeiro deploy subiu a API respondendo, mas
+  `/items` dava `500` — banco sem nenhuma tabela, porque não há Shell no
+  Web Service free do Render pra rodar `alembic upgrade head` manualmente.
+  Corrigido criando `backend/entrypoint.sh` (roda `alembic upgrade head` +
+  `python -m app.seeds.load` + `exec uvicorn ...` a cada boot do
+  container — idempotente, seguro repetir) e trocando o `CMD` do
+  `infra/backend.Dockerfile` pra usar esse entrypoint. Depois do redeploy,
+  `/items` respondeu `200` com os 14 itens do seed.
+- API no ar: **https://albion-api-9839.onrender.com**.
+
+**Fechando o loop do turno 9** (env var do Netlify):
+- Atualizei `API_BASE_URL` no site Netlify pra URL real do Render (antes
+  era um placeholder). Confirmado lendo o valor de volta via conector MCP
+  (duas chamadas retornaram erro "422" na escrita, mas a leitura seguinte
+  confirmou que o valor tinha sido salvo certo em todos os contexts —
+  tratado como erro não-bloqueante, estado final é o que importa).
+- Disparado "Deploy project" manual no Netlify pra pegar a env var nova
+  (build de ~3min, sucesso).
+- **Testado de verdade no site publicado**: busquei "T4" em
+  albion-web.netlify.app, voltaram 14 itens reais (Espada Longa, Minério
+  de Ferro, etc.) via `/api/items?query=T4` → `200`. A home carrega
+  `/api/items` sem query — na primeira visita deu `500` (cold start do
+  Render, serviço dormindo; ver `docs/DEPLOY_FREE_TIERS.md`), recarreguei
+  a página e a mesma rota voltou `200` — não é bug, é o comportamento
+  esperado do free tier.
+
+**Estado atual**: web e API no ar, públicos, conectados, busca funcionando
+de ponta a ponta. Pendente: worker/coletor de preços real (sem onde rodar
+em produção ainda — avaliar depois: Render pago, GitHub Actions
+agendado, ou outro free tier com worker).
 
 ## Changelog de setup (turno 9 — bug real: nome errado da env var da API)
 
