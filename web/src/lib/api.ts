@@ -1,3 +1,24 @@
+/** Taxas reais do mercado do jogo (sem Premium — Premium paga metade),
+ * confirmadas com print do cliente (turno 16): 8% de taxa de venda (tanto
+ * venda instantânea quanto pedido de venda), mais 2,5% de "Taxa de Ordem"
+ * só pra pedidos — paga ao criar o pedido, mesmo que ele nunca venda. */
+export const SALES_TAX_RATE = 0.08;
+export const ORDER_SETUP_FEE_RATE = 0.025;
+
+/** Quanto você recebe vendendo instantaneamente (preenche a melhor ordem
+ * de compra já publicada) — só desconta `SALES_TAX_RATE`. */
+export function netInstantSellPrice(grossBuyPriceMax: number): number {
+  return Math.round(grossBuyPriceMax * (1 - SALES_TAX_RATE));
+}
+
+/** Quanto você recebe **se** seu próprio pedido de venda (criado no preço
+ * da oferta mais barata já publicada, pra ser competitivo) vender —
+ * desconta `SALES_TAX_RATE` + `ORDER_SETUP_FEE_RATE` (essa paga na
+ * criação do pedido, perdida mesmo que ele nunca venda). */
+export function netSellOrderPrice(grossSellPriceMin: number): number {
+  return Math.round(grossSellPriceMin * (1 - SALES_TAX_RATE - ORDER_SETUP_FEE_RATE));
+}
+
 export interface ItemResult {
   id: string;
   code: string;
@@ -104,7 +125,8 @@ export interface TradeOpportunity {
   buy_price: number;
   sell_city_id: string;
   sell_city_name: string;
-  sell_price: number;
+  sell_price: number; // venda instantânea, líquida da taxa de 8%
+  sell_order_price: number; // pedido de venda, líquido de 8% + 2,5% de taxa de ordem (0 = sem oferta pra basear o preço)
   profit: number;
   collected_at: string;
 }

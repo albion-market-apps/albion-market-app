@@ -44,8 +44,9 @@ def test_refining_pairs_raw_at_city_with_best_refined_sell(
     assert row["raw_price"] == 50
     assert row["refined_code"] == "T4_METALBAR"
     assert row["refined_best_city_id"] == str(world["city_a2"])
-    # buy_price_max do seed = sell_price_min - 10 + i = 300 - 10 + 0 = 290
-    assert row["refined_best_price"] == 290
+    # buy_price_max do seed = sell_price_min - 10 + i = 300 - 10 + 0 = 290;
+    # líquido da taxa de 8% (venda instantânea) = round(290 * 0.92) = 267.
+    assert row["refined_best_price"] == 267
 
 
 def test_refining_empty_when_no_raw_offer_at_city(

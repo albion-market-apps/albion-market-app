@@ -65,6 +65,7 @@ def _enrich(
                 sell_city_id=trade.sell_city_id,
                 sell_city_name=sell_city.name,
                 sell_price=trade.sell_price,
+                sell_order_price=trade.sell_order_price,
                 profit=trade.profit,
                 collected_at=trade.collected_at,
             )

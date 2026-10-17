@@ -1,9 +1,12 @@
 """Comparação simples entre matéria-prima e material refinado correspondente
-— **sem calcular lucro** (decisão explícita do usuário: a taxa de retorno do
-refino depende de foco, especialização de cidade e premium, nada disso dá
-pra saber pela API de preços — ver docs/claude.md, turno 13). Só mostra o
-preço da matéria-prima na cidade informada ao lado do melhor preço de venda
-do material refinado, pra pessoa fazer a própria conta.
+— **sem calcular lucro de refino** (decisão explícita do usuário: a taxa de
+retorno do refino depende de foco, especialização de cidade e premium,
+nada disso dá pra saber pela API de preços — ver docs/claude.md, turno 13).
+Só mostra o preço da matéria-prima na cidade informada ao lado do melhor
+preço de venda **instantânea, já líquido da taxa de 8%** do material
+refinado (mesma taxa confirmada com print real do jogo, turno 16 — ver
+`app.services.opportunities`), pra pessoa fazer a própria conta do refino
+em cima de um valor que já é o que ela receberia de verdade.
 """
 
 from dataclasses import dataclass
@@ -13,7 +16,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.models.item import Item
-from app.services.opportunities import latest_quality1_prices
+from app.services.opportunities import latest_quality1_prices, net_instant_sell_price
 
 # (sufixo da matéria-prima, sufixo do material refinado) — mesma convenção
 # de code usada no resto do catálogo (T{tier}_{sufixo}).
@@ -92,7 +95,7 @@ def refining_comparison_at_city(
                 refined_item_id=refined_item.id,
                 refined_code=refined_item.code,
                 refined_name=refined_item.name,
-                refined_best_price=sellable[best_city_id]["buy_price_max"],
+                refined_best_price=net_instant_sell_price(sellable[best_city_id]["buy_price_max"]),
                 refined_best_city_id=best_city_id,
             )
         )

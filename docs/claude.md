@@ -283,6 +283,64 @@ turno 10); é só um stub por enquanto, não bloqueia o MVP.
 - [ ] Recursos de produção (Neon/Upstash/Render/Vercel) nunca compartilhados
       com outro projeto do mantenedor — pendente (depende do Vercel acima).
 
+## Changelog de setup (turno 16 — taxa real do mercado: venda instantânea x pedido de venda)
+
+**Pedido do turno**: usuário perguntou se compra/venda consideravam
+transação instantânea ou montar ordem. Respondi que tudo hoje era
+instantâneo nos dois lados (sem taxa nenhuma aplicada) e perguntei se
+queria deixar isso mais claro na tela — ele pediu uma coisa mais
+específica: **compra sempre instantânea, mas venda com os 2 valores**
+(instantânea e por ordem). Em seguida mandou **dois prints reais do
+cliente do jogo** (tela de venda da "Vara de Pescar do Perito" em
+Lymhurst) mostrando as taxas de verdade, resolvendo de vez a incerteza que
+tinha travado o cálculo de lucro do refino no turno 13.
+
+**Dado real extraído dos prints** (conta sem Premium — Premium paga
+metade, mostrado no próprio jogo):
+- **Vender** (venda instantânea): preço 1.345, taxa 108 = **8,0%** de
+  taxa de venda.
+- **Pedido de Venda**: preço 3.880, taxa 310 (8,0%, mesma taxa de venda)
+  **+** 97 de "Taxa de Ordem" (**2,5%**) — essa paga **na hora de criar o
+  pedido**, mesmo que ele nunca venda.
+
+**Corrigido/implementado** (`backend/app/services/opportunities.py`):
+- `SALES_TAX_RATE = 0.08`, `ORDER_SETUP_FEE_RATE = 0.025`,
+  `net_instant_sell_price()` e `net_sell_order_price()` — funções novas,
+  usadas tanto no cálculo de oportunidade quanto na comparação de refino
+  (`app/services/refining.py`, `refined_best_price` agora líquido de 8%).
+- `TradeOpportunity`/`TradeOpportunityOut` ganharam `sell_order_price`
+  (venda por ordem, líquida das duas taxas) ao lado de `sell_price` (venda
+  instantânea, líquida só da taxa de venda) — `buy_price` continua sem
+  taxa (comprador não paga taxa de venda).
+- **Lucro/ranking continuam baseados na venda instantânea** (cenário
+  garantido) — o valor de pedido é só informativo, não reordena o Top 5
+  nem "onde eu estou" (decisão: pedido de venda não é garantido, pode
+  nunca vender ou ser atropelado por outra ordem).
+- Testes atualizados com os valores líquidos corretos (`test_opportunities.py`,
+  `test_refining.py`).
+
+**Front**:
+- `web/src/lib/api.ts`: `SALES_TAX_RATE`, `ORDER_SETUP_FEE_RATE`,
+  `netInstantSellPrice()`, `netSellOrderPrice()` — mesmas constantes do
+  backend, usadas pela calculadora (que roda client-side em cima do
+  `/prices` cru, não do endpoint de oportunidades).
+- `item-detail-view.tsx`: a tabela de comparação continua mostrando preço
+  bruto do mercado (dado real tal como está, com nota explicando que é
+  bruto); a **calculadora agora mostra os dois cenários de venda lado a
+  lado** ("Vender na hora" x "Criar pedido de venda"), cada um com seu
+  próprio lucro estimado já líquido de taxa.
+- `home-view.tsx`: favoritos, Top 5 e "onde eu estou" ganharam a dica
+  "ou crie pedido de venda por ~X" ao lado do lucro de venda instantânea.
+
+**Validado localmente**: testei a calculadora contra a API real do Render
+(item "Machado de Batalha — T4", 100.000 de investimento) — venda
+instantânea deu **lucro de -58.880** (prejuízo), pedido de venda deu
+**lucro de +19.320** — mesma ordem de grandeza de diferença que o usuário
+mostrou no print real do jogo (quase 3x), confirmando que o cálculo faz
+sentido. `tsc --noEmit` e `pnpm lint` limpos; `python3 -m py_compile`
+limpo nos arquivos Python. Sem Postgres/Docker neste ambiente pra rodar os
+testes de integração do backend.
+
 ## Changelog de setup (turno 15 — "Top 5 do mercado", sem precisar escolher cidade)
 
 **Pedido do turno**: usuário propôs verificar todos os itens em todas as

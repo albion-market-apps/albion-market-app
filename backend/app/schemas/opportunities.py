@@ -15,6 +15,7 @@ class TradeOpportunityOut(ORMModel):
     buy_price: int
     sell_city_id: UUID
     sell_city_name: str
-    sell_price: int
+    sell_price: int  # venda instantânea
+    sell_order_price: int  # venda por ordem própria (0 = sem oferta de venda ativa lá)
     profit: int
     collected_at: datetime

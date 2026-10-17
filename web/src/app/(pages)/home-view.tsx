@@ -230,6 +230,15 @@ export function HomeView({
                           price: trade.sell_price.toLocaleString(),
                         })}{" "}
                         · {t("profitLabel")}: {trade.profit.toLocaleString()}
+                        {trade.sell_order_price > 0 && (
+                          <>
+                            {" "}
+                            ·{" "}
+                            {t("sellOrderHint", {
+                              price: trade.sell_order_price.toLocaleString(),
+                            })}
+                          </>
+                        )}
                       </div>
                     ) : (
                       <div className="text-sm text-slate-500">{t("favoriteNoData")}</div>
@@ -354,6 +363,12 @@ function OpportunityList({
               {t("sellAtLabel", { city: trade.sell_city_name, price: trade.sell_price.toLocaleString() })}
               {" · "}
               {t("profitLabel")}: {trade.profit.toLocaleString()}
+              {trade.sell_order_price > 0 && (
+                <>
+                  {" · "}
+                  {t("sellOrderHint", { price: trade.sell_order_price.toLocaleString() })}
+                </>
+              )}
             </div>
           </button>
         </li>

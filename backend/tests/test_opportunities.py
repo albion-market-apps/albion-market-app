@@ -36,8 +36,13 @@ def test_favorites_finds_best_buy_and_sell_city(
     assert trade["buy_city_id"] == str(world["city_a"])
     assert trade["buy_price"] == 100
     assert trade["sell_city_id"] == str(world["city_a2"])
-    assert trade["sell_price"] == 890
-    assert trade["profit"] == 790
+    # buy_price_max bruto de city_a2 = 890; líquido de venda instantânea
+    # (8% de taxa) = round(890 * 0.92) = 819.
+    assert trade["sell_price"] == 819
+    assert trade["profit"] == 719
+    # sell_order_price = líquido de pedido de venda no sell_price_min bruto
+    # de city_a2 (900): round(900 * (1 - 0.08 - 0.025)) = 806.
+    assert trade["sell_order_price"] == 806
 
 
 def test_favorites_rejects_more_than_four_items(client: TestClient, world: dict) -> None:
@@ -80,7 +85,7 @@ def test_best_from_city_ranks_by_profit_and_locks_buy_city(
     body = response.json()
     assert len(body) == 1
     assert body[0]["buy_city_id"] == str(world["city_a"])
-    assert body[0]["profit"] == 790
+    assert body[0]["profit"] == 719
 
 
 def test_best_from_city_excludes_negative_profit(
@@ -155,12 +160,13 @@ def test_best_trade_never_buys_and_sells_in_the_same_city(
     # city_a sozinha "pareceria" perfeita (compre a 100, venda a 200) — mas
     # é a MESMA cidade pros dois lados, não vale. A melhor combinação real
     # entre cidades diferentes é comprar em city_a2 (150) e vender em
-    # city_a (200): lucro 50 — bem menor que os 100 que o bug mostraria.
+    # city_a: líquido de taxa (8%) = round(200 * 0.92) = 184, lucro 34 —
+    # bem menor que o "lucro" sem sentido que o bug mostraria.
     assert trade["buy_city_id"] == str(world["city_a2"])
     assert trade["buy_price"] == 150
     assert trade["sell_city_id"] == str(world["city_a"])
-    assert trade["sell_price"] == 200
-    assert trade["profit"] == 50
+    assert trade["sell_price"] == 184
+    assert trade["profit"] == 34
 
 
 def test_top_opportunities_ranks_whole_catalog_without_city_filter(
@@ -174,7 +180,7 @@ def test_top_opportunities_ranks_whole_catalog_without_city_filter(
     assert len(body) == 1
     assert body[0]["buy_city_id"] == str(world["city_a"])
     assert body[0]["sell_city_id"] == str(world["city_a2"])
-    assert body[0]["profit"] == 790
+    assert body[0]["profit"] == 719
 
 
 def test_top_opportunities_respects_limit(client: TestClient, db: Session, world: dict) -> None:

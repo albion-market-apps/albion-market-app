@@ -7,6 +7,8 @@ import {
   fetchCities,
   fetchPrices,
   latestPricePerCity,
+  netInstantSellPrice,
+  netSellOrderPrice,
   type City,
   type ItemResult,
   type PriceRaw,
@@ -15,18 +17,14 @@ import { MAX_FAVORITES } from "@/lib/favorites";
 
 type CityPriceRow = { city: City; price: PriceRaw };
 
-/** Melhor par (cidade de compra, cidade de venda) maximizando o lucro —
- * **sempre cidades diferentes**. Comprar e "vender" na mesma cidade não é
- * arbitragem nenhuma (sem viagem, não tem razão pra tratar compra e venda
- * como lugares separados — e normalmente dá prejuízo garantido, porque
- * `buy_price_max` de uma cidade costuma ser menor que o próprio
- * `sell_price_min` dela, por causa do spread do mercado). Busca exaustiva
- * sobre os pares — no máximo 7 cidades, O(n²) é barato — em vez de
- * escolher a cidade mais barata pra comprar e a melhor pra vender de forma
- * independente, que pode "empatar" na mesma cidade mesmo quando outra
- * combinação daria mais lucro (bug real: ver docs/claude.md, turno 14).
- * Mesmo algoritmo usado no backend (`app/services/opportunities.py`),
- * pra calculadora e badges nunca contradizerem a API. */
+/** Melhor par (cidade de compra, cidade de venda) maximizando o lucro **já
+ * líquido de taxa** (venda instantânea) — sempre cidades diferentes.
+ * Comprar e "vender" na mesma cidade não é arbitragem nenhuma (sem
+ * viagem, não tem razão pra tratar compra e venda como lugares
+ * separados). Busca exaustiva sobre os pares — no máximo 7 cidades, O(n²)
+ * é barato. Mesmo algoritmo usado no backend
+ * (`app/services/opportunities.py::best_trade_for_item`), pra calculadora
+ * e API nunca se contradizerem. */
 function findBestTrade(
   rows: CityPriceRow[],
 ): { buy: CityPriceRow; sell: CityPriceRow; profit: number } | null {
@@ -34,7 +32,7 @@ function findBestTrade(
   for (const buy of rows) {
     for (const sell of rows) {
       if (buy.city.id === sell.city.id) continue;
-      const profit = sell.price.buy_price_max - buy.price.sell_price_min;
+      const profit = netInstantSellPrice(sell.price.buy_price_max) - buy.price.sell_price_min;
       if (!best || profit > best.profit) {
         best = { buy, sell, profit };
       }
@@ -140,13 +138,19 @@ export function ItemDetailView({
               ))}
             </tbody>
           </table>
+          <p className="text-xs text-slate-500">{t("pricesAreGross")}</p>
 
           {cheapestToBuy && bestToSell && (
             <InvestmentCalculator
               buyCity={cheapestToBuy.city.name}
               buyPrice={cheapestToBuy.price.sell_price_min}
               sellCity={bestToSell.city.name}
-              sellPrice={bestToSell.price.buy_price_max}
+              sellInstantPrice={netInstantSellPrice(bestToSell.price.buy_price_max)}
+              sellOrderPrice={
+                bestToSell.price.sell_price_min > 0
+                  ? netSellOrderPrice(bestToSell.price.sell_price_min)
+                  : null
+              }
             />
           )}
         </>
@@ -159,27 +163,26 @@ function InvestmentCalculator({
   buyCity,
   buyPrice,
   sellCity,
-  sellPrice,
+  sellInstantPrice,
+  sellOrderPrice,
 }: {
   buyCity: string;
   buyPrice: number;
   sellCity: string;
-  sellPrice: number;
+  sellInstantPrice: number;
+  sellOrderPrice: number | null;
 }) {
   const t = useTranslations("home");
   const [investment, setInvestment] = useState("");
   const amount = Number(investment) || 0;
   const units = buyPrice > 0 ? Math.floor(amount / buyPrice) : 0;
   const cost = units * buyPrice;
-  const revenue = units * sellPrice;
-  const profit = revenue - cost;
 
   return (
     <div className="rounded border border-slate-800 bg-slate-900 p-4">
       <h2 className="mb-1 text-lg font-medium">{t("calculatorTitle")}</h2>
       <p className="mb-3 text-sm text-slate-400">
-        {t("buyAtLabel", { city: buyCity, price: buyPrice.toLocaleString() })} ·{" "}
-        {t("sellAtLabel", { city: sellCity, price: sellPrice.toLocaleString() })}
+        {t("buyAtLabel", { city: buyCity, price: buyPrice.toLocaleString() })}
       </p>
 
       <label className="flex flex-col gap-1 text-sm text-slate-400">
@@ -199,19 +202,68 @@ function InvestmentCalculator({
       )}
 
       {units > 0 && (
-        <div className="mt-3 flex flex-col gap-1 text-sm">
+        <div className="mt-3 flex flex-col gap-4 text-sm">
           <p className="text-slate-300">{t("calculatorUnits", { units })}</p>
           <p className="text-slate-400">
             {t("calculatorCost")}: {cost.toLocaleString()}
           </p>
-          <p className="text-slate-400">
-            {t("calculatorRevenue")}: {revenue.toLocaleString()}
-          </p>
-          <p className={profit >= 0 ? "font-medium text-emerald-400" : "font-medium text-red-400"}>
-            {t("calculatorProfit")}: {profit.toLocaleString()}
-          </p>
+
+          <SellScenario
+            label={t("sellInstantScenario")}
+            description={t("sellAtLabel", {
+              city: sellCity,
+              price: sellInstantPrice.toLocaleString(),
+            })}
+            revenue={units * sellInstantPrice}
+            cost={cost}
+          />
+
+          {sellOrderPrice !== null ? (
+            <SellScenario
+              label={t("sellOrderScenario")}
+              description={t("sellAtLabel", {
+                city: sellCity,
+                price: sellOrderPrice.toLocaleString(),
+              })}
+              revenue={units * sellOrderPrice}
+              cost={cost}
+              note={t("sellOrderNote")}
+            />
+          ) : (
+            <p className="text-slate-500">{t("sellOrderNoData")}</p>
+          )}
         </div>
       )}
+    </div>
+  );
+}
+
+function SellScenario({
+  label,
+  description,
+  revenue,
+  cost,
+  note,
+}: {
+  label: string;
+  description: string;
+  revenue: number;
+  cost: number;
+  note?: string;
+}) {
+  const t = useTranslations("home");
+  const profit = revenue - cost;
+  return (
+    <div className="rounded border border-slate-800 bg-slate-950 p-3">
+      <p className="font-medium text-slate-200">{label}</p>
+      <p className="text-slate-400">{description}</p>
+      <p className="text-slate-400">
+        {t("calculatorRevenue")}: {revenue.toLocaleString()}
+      </p>
+      <p className={profit >= 0 ? "font-medium text-emerald-400" : "font-medium text-red-400"}>
+        {t("calculatorProfit")}: {profit.toLocaleString()}
+      </p>
+      {note && <p className="mt-1 text-xs text-slate-500">{note}</p>}
     </div>
   );
 }
