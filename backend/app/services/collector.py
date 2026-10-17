@@ -25,6 +25,12 @@ from app.services.pricing import record_prices
 logger = logging.getLogger(__name__)
 settings = get_settings()
 
+# A AODP não documenta um limite oficial de itens por requisição, mas pedir
+# centenas de uma vez de uma vez só é um jeito conhecido de tomar timeout ou
+# 400 nas ferramentas da comunidade — depois do catálogo crescer de 20 pra
+# 160 itens (turno 13), passamos a pedir em lotes.
+_AODP_BATCH_SIZE = 50
+
 
 def _unique_name(item: Item) -> str:
     """Reconstrói o `unique_name` que a AODP espera: `code` puro pra enchant 0,
@@ -32,11 +38,25 @@ def _unique_name(item: Item) -> str:
     return item.code if item.enchant == 0 else f"{item.code}@{item.enchant}"
 
 
-def _fetch_aodp_prices(unique_names: list[str], city_codes: list[str]) -> list[dict]:
+def _fetch_aodp_prices_batch(unique_names: list[str], city_codes: list[str]) -> list[dict]:
     url = f"{settings.albion_base_url}/prices/{','.join(unique_names)}.json"
-    response = httpx.get(url, params={"locations": ",".join(city_codes)}, timeout=15.0)
+    response = httpx.get(url, params={"locations": ",".join(city_codes)}, timeout=20.0)
     response.raise_for_status()
     return response.json()
+
+
+def _fetch_aodp_prices(unique_names: list[str], city_codes: list[str]) -> list[dict]:
+    """Busca em lotes de `_AODP_BATCH_SIZE` itens — um lote que falhar (rede,
+    timeout) só perde aquele pedaço do catálogo neste ciclo, não a coleta
+    inteira; o próximo ciclo tenta de novo."""
+    payload: list[dict] = []
+    for start in range(0, len(unique_names), _AODP_BATCH_SIZE):
+        batch = unique_names[start : start + _AODP_BATCH_SIZE]
+        try:
+            payload.extend(_fetch_aodp_prices_batch(batch, city_codes))
+        except httpx.HTTPError:
+            logger.exception("coletor: falha buscando lote de %s itens na AODP", len(batch))
+    return payload
 
 
 def collect_once(tenant_id: UUID) -> int:

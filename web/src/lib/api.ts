@@ -144,3 +144,29 @@ export async function fetchBestFromCity(
   }
   return response.json();
 }
+
+export interface RefiningComparison {
+  tier: number;
+  raw_item_id: string;
+  raw_code: string;
+  raw_name: string;
+  raw_price: number;
+  refined_item_id: string;
+  refined_code: string;
+  refined_name: string;
+  refined_best_price: number;
+  refined_best_city_id: string;
+  refined_best_city_name: string;
+}
+
+/** Preço da matéria-prima na cidade informada ao lado do melhor preço do
+ * material refinado — sem calcular lucro, por decisão do usuário (a taxa de
+ * retorno real do refino depende de foco/especialização/premium, que a API
+ * de preços não sabe). */
+export async function fetchRefiningAtCity(cityId: string): Promise<RefiningComparison[]> {
+  const response = await fetch(`/api/refining?city_id=${encodeURIComponent(cityId)}`);
+  if (!response.ok) {
+    throw new Error(`Falha ao buscar dados de refino: ${response.status}`);
+  }
+  return response.json();
+}

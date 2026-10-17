@@ -8,8 +8,10 @@ import {
   fetchCities,
   fetchFavoritesOpportunities,
   fetchItems,
+  fetchRefiningAtCity,
   itemFromTrade,
   type ItemResult,
+  type RefiningComparison,
   type TradeOpportunity,
 } from "@/lib/api";
 
@@ -58,6 +60,10 @@ export function HomeView({
   const { data: bestOpportunities, isLoading: isLoadingBest } = useSWR(
     queriedCityId ? ["best-from-city", queriedCityId] : null,
     () => fetchBestFromCity(queriedCityId!),
+  );
+  const { data: refiningRows, isLoading: isLoadingRefining } = useSWR(
+    queriedCityId ? ["refining-at-city", queriedCityId] : null,
+    () => fetchRefiningAtCity(queriedCityId!),
   );
 
   return (
@@ -136,6 +142,23 @@ export function HomeView({
             }}
           />
         )}
+
+        {queriedCityId && (
+          <>
+            <h3 className="mt-2 text-sm font-medium text-slate-400">{t("refiningTitle")}</h3>
+            <p className="text-sm text-slate-500">{t("refiningSubtitle")}</p>
+          </>
+        )}
+
+        {isLoadingRefining && <p className="text-slate-400">...</p>}
+
+        {refiningRows && (
+          <RefiningTable
+            rows={refiningRows}
+            emptyMessage={t("refiningEmpty")}
+            onSelectItem={onSelectItem}
+          />
+        )}
       </section>
 
       <section className="flex flex-col gap-3">
@@ -180,6 +203,74 @@ export function HomeView({
         )}
       </section>
     </div>
+  );
+}
+
+function RefiningTable({
+  rows,
+  emptyMessage,
+  onSelectItem,
+}: {
+  rows: RefiningComparison[];
+  emptyMessage: string;
+  onSelectItem: (item: ItemResult) => void;
+}) {
+  const t = useTranslations("home");
+
+  if (rows.length === 0) {
+    return <p className="text-slate-400">{emptyMessage}</p>;
+  }
+
+  return (
+    <table className="w-full border-collapse overflow-hidden rounded border border-slate-800 text-left">
+      <thead className="bg-slate-900 text-sm text-slate-400">
+        <tr>
+          <th className="px-3 py-2">{t("refiningTierColumn")}</th>
+          <th className="px-3 py-2">{t("refiningRawColumn")}</th>
+          <th className="px-3 py-2">{t("refiningRefinedColumn")}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {rows.map((row) => (
+          <tr key={`${row.raw_item_id}-${row.refined_item_id}`} className="border-t border-slate-800">
+            <td className="px-3 py-2 text-slate-400">T{row.tier}</td>
+            <td className="px-3 py-2">
+              <button
+                onClick={() =>
+                  onSelectItem({
+                    id: row.raw_item_id,
+                    code: row.raw_code,
+                    name: row.raw_name,
+                    tier: row.tier,
+                    enchant: 0,
+                  })
+                }
+                className="text-left hover:text-emerald-400"
+              >
+                {row.raw_name} — {row.raw_price.toLocaleString()}
+              </button>
+            </td>
+            <td className="px-3 py-2">
+              <button
+                onClick={() =>
+                  onSelectItem({
+                    id: row.refined_item_id,
+                    code: row.refined_code,
+                    name: row.refined_name,
+                    tier: row.tier,
+                    enchant: 0,
+                  })
+                }
+                className="text-left hover:text-emerald-400"
+              >
+                {row.refined_name} — {row.refined_best_price.toLocaleString()} (
+                {row.refined_best_city_name})
+              </button>
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
   );
 }
 

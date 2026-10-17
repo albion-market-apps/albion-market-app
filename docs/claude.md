@@ -283,6 +283,72 @@ turno 10); é só um stub por enquanto, não bloqueia o MVP.
 - [ ] Recursos de produção (Neon/Upstash/Render/Vercel) nunca compartilhados
       com outro projeto do mantenedor — pendente (depende do Vercel acima).
 
+## Changelog de setup (turno 13 — catálogo maior e comparação de refino)
+
+**Pedido do turno**: usuário reportou que buscar "machado" só achava 1
+resultado, e pediu uma feature nova — ao informar a cidade, o site também
+dizer qual matéria-prima comprar ali pra refinar e revender.
+
+**Causa do "só 1 machado"**: não é bug — o catálogo (`backend/app/seeds/items.json`)
+tinha só 20 itens escolhidos à mão desde o turno 1, com um único machado
+(`T4_MAIN_AXE`). Resolvido expandindo o catálogo de 20 pra **160 itens**:
+16 famílias de arma (espada, machado 1H/2H, arco, maça 1H/2H, martelo
+1H/2H, lança, adaga, 6 cajados) em T4-T8, mais matéria-prima **e** material
+refinado (minério/barra, madeira/tábua, couro/couro curtido, fibra/tecido,
+pedra/bloco) em T2-T8 — essa segunda parte também é a base de dado da
+feature de refino pedida. Nomes em português são aproximação (mesma
+ressalva já existente no arquivo), não localização oficial do jogo.
+`backend/app/seeds/load.py` já era idempotente — não precisou mudar nada
+pra rodar com o catálogo maior, só o `entrypoint.sh` re-executa `load.py`
+no próximo boot do container.
+
+**Coletor ajustado pro catálogo maior**
+(`backend/app/services/collector.py`): a AODP não documenta um limite de
+itens por requisição, mas pedir 160 de uma vez é um jeito conhecido de
+tomar timeout/erro — `_fetch_aodp_prices` agora pede em lotes de 50
+(`_AODP_BATCH_SIZE`), e um lote que falhar só perde aquele pedaço da coleta
+naquele ciclo (log + segue pros outros lotes), não aborta tudo.
+
+**Feature de refino — decisão de escopo tomada com o usuário**: perguntei
+como calcular o "lucro do refino", já que a taxa de retorno real depende de
+foco, especialização de cidade e premium — nada disso a API de preços
+sabe. Three opções (retorno ajustável, estimativa fixa, só mostrar preços
+lado a lado) — usuário escolheu **só mostrar preços lado a lado, sem
+calcular lucro nenhum**. Implementado assim, sem inventar número de
+retorno.
+
+- `backend/app/services/refining.py` (novo): pra cada par matéria-prima/
+  refinado (T2-T8, os 5 tipos de recurso) que existir no catálogo, pega o
+  preço de compra da matéria-prima na cidade informada (ignora se não tiver
+  oferta ali) e a melhor oferta de compra do material refinado entre todas
+  as cidades — reaproveita `latest_quality1_prices` de
+  `app.services.opportunities` (mesma convenção de qualidade 1).
+- `GET /refining?city_id=...` (`app/api/routes/refining.py` +
+  `app/schemas/refining.py`): resposta já com nome de cidade/item
+  enriquecido, mesmo padrão de `opportunities.py`.
+- Front (`web/src/app/(pages)/home-view.tsx`): nova tabela "Matérias-primas
+  pra refino" dentro da seção "Onde você está" (reaproveita a mesma cidade
+  selecionada pra "onde eu estou") — tier, matéria-prima com preço ali,
+  material refinado com melhor preço e cidade. Cada linha clicável leva pra
+  tela de detalhe daquele item. Texto deixa claro que não é lucro
+  calculado.
+- Testes novos (`backend/tests/test_refining.py`): par com oferta de
+  matéria-prima entra, cidade sem oferta de matéria-prima fica vazia,
+  catálogo sem nenhum par vira lista vazia.
+
+**Sobre o comentário do usuário em "arco" mostrando só T4/T5**: não era bug
+— é o mesmo catálogo pequeno (resolvido acima). Confirmei que o formato das
+sugestões do autocomplete (`"{nome} — T{tier}.{encantamento} ({code})"`)
+já deixa claro o suficiente pra pessoa digitar algo mais específico (ex.
+"Arco Longo Mestre T5.2") e escolher a linha certa na lista — não precisa
+de nenhuma mudança de UX aqui, só o catálogo maior resolve o "poucos
+resultados".
+
+**Validado localmente**: `tsc --noEmit` e `pnpm lint` limpos; `python3 -m
+py_compile` limpo nos arquivos novos/alterados. Sem Postgres/Docker neste
+ambiente pra rodar os testes de integração — igual aos turnos anteriores,
+verificação final é contra o deploy real.
+
 ## Changelog de setup (turno 12 — favoritos, calculadora de lucro, autocomplete e "onde eu estou")
 
 **Pedido do turno**: usuário pediu quatro coisas na sequência, todas em cima

@@ -35,7 +35,13 @@
     "calculatorCost": "Custo total",
     "calculatorRevenue": "Retorno vendendo",
     "calculatorProfit": "Lucro estimado",
-    "calculatorNotEnough": "Não dá pra comprar nenhuma unidade com esse valor."
+    "calculatorNotEnough": "Não dá pra comprar nenhuma unidade com esse valor.",
+    "refiningTitle": "Matérias-primas pra refino",
+    "refiningSubtitle": "Preço da matéria-prima aqui ao lado do melhor preço do material refinado — sem calcular lucro, a taxa de retorno do refino depende do seu foco/especialização/premium.",
+    "refiningTierColumn": "Tier",
+    "refiningRawColumn": "Matéria-prima (aqui)",
+    "refiningRefinedColumn": "Material refinado (melhor preço)",
+    "refiningEmpty": "Nenhuma matéria-prima à venda nessa cidade com material refinado correspondente rastreado ainda."
   },
   "header": {
     "localeLabel": "Idioma"

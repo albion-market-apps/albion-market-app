@@ -35,7 +35,13 @@
     "calculatorCost": "Total cost",
     "calculatorRevenue": "Return selling",
     "calculatorProfit": "Estimated profit",
-    "calculatorNotEnough": "Can't buy a single unit with that amount."
+    "calculatorNotEnough": "Can't buy a single unit with that amount.",
+    "refiningTitle": "Raw materials to refine",
+    "refiningSubtitle": "Raw material price here next to the refined material's best price — no profit math, your actual refining return rate depends on focus/specialization/premium.",
+    "refiningTierColumn": "Tier",
+    "refiningRawColumn": "Raw material (here)",
+    "refiningRefinedColumn": "Refined material (best price)",
+    "refiningEmpty": "No raw material for sale in this city with a tracked matching refined material yet."
   },
   "header": {
     "localeLabel": "Language"

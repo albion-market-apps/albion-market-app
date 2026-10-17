@@ -1,22 +1,962 @@
 [
-  { "code": "T3_MAIN_SWORD", "name": "Espada Curta", "tier": 3, "enchant": 0 },
-  { "code": "T4_MAIN_SWORD", "name": "Espada Longa", "tier": 4, "enchant": 0 },
-  { "code": "T4_MAIN_SWORD", "name": "Espada Longa", "tier": 4, "enchant": 1 },
-  { "code": "T5_MAIN_SWORD", "name": "Espada Longa Mestre", "tier": 5, "enchant": 0 },
-  { "code": "T4_2H_BOW", "name": "Arco de Guerra", "tier": 4, "enchant": 0 },
-  { "code": "T5_2H_BOW", "name": "Arco Longo Mestre", "tier": 5, "enchant": 0 },
-  { "code": "T4_MAIN_AXE", "name": "Machado de Batalha", "tier": 4, "enchant": 0 },
-  { "code": "T6_2H_CLAYMORE", "name": "Claymore Especialista", "tier": 6, "enchant": 0 },
-  { "code": "T4_HEAD_PLATE_SET1", "name": "Elmo de Soldado", "tier": 4, "enchant": 0 },
-  { "code": "T4_ARMOR_PLATE_SET1", "name": "Armadura de Soldado", "tier": 4, "enchant": 0 },
-  { "code": "T4_SHOES_PLATE_SET1", "name": "Botas de Soldado", "tier": 4, "enchant": 0 },
-  { "code": "T5_ARMOR_LEATHER_SET1", "name": "Jaqueta de Caçador Mestre", "tier": 5, "enchant": 0 },
-  { "code": "T4_BAG", "name": "Bolsa Adepta", "tier": 4, "enchant": 0 },
-  { "code": "T5_CAPE", "name": "Capa Mestre", "tier": 5, "enchant": 0 },
-  { "code": "T4_OFF_TORCH", "name": "Lanterna", "tier": 4, "enchant": 0 },
-  { "code": "T4_ORE", "name": "Minério de Ferro", "tier": 4, "enchant": 0 },
-  { "code": "T4_WOOD", "name": "Madeira de Carvalho", "tier": 4, "enchant": 0 },
-  { "code": "T4_HIDE", "name": "Couro de Lobo", "tier": 4, "enchant": 0 },
-  { "code": "T4_FIBER", "name": "Fibra de Linho", "tier": 4, "enchant": 0 },
-  { "code": "T4_ROCK", "name": "Pedra Granito", "tier": 4, "enchant": 0 }
+  {
+    "code": "T3_MAIN_SWORD",
+    "name": "Espada Curta",
+    "tier": 3,
+    "enchant": 0
+  },
+  {
+    "code": "T4_MAIN_SWORD",
+    "name": "Espada Longa",
+    "tier": 4,
+    "enchant": 0
+  },
+  {
+    "code": "T4_MAIN_SWORD",
+    "name": "Espada Longa",
+    "tier": 4,
+    "enchant": 1
+  },
+  {
+    "code": "T5_MAIN_SWORD",
+    "name": "Espada Longa Mestre",
+    "tier": 5,
+    "enchant": 0
+  },
+  {
+    "code": "T4_2H_BOW",
+    "name": "Arco de Guerra",
+    "tier": 4,
+    "enchant": 0
+  },
+  {
+    "code": "T5_2H_BOW",
+    "name": "Arco Longo Mestre",
+    "tier": 5,
+    "enchant": 0
+  },
+  {
+    "code": "T4_MAIN_AXE",
+    "name": "Machado de Batalha",
+    "tier": 4,
+    "enchant": 0
+  },
+  {
+    "code": "T6_2H_CLAYMORE",
+    "name": "Claymore Especialista",
+    "tier": 6,
+    "enchant": 0
+  },
+  {
+    "code": "T4_HEAD_PLATE_SET1",
+    "name": "Elmo de Soldado",
+    "tier": 4,
+    "enchant": 0
+  },
+  {
+    "code": "T4_ARMOR_PLATE_SET1",
+    "name": "Armadura de Soldado",
+    "tier": 4,
+    "enchant": 0
+  },
+  {
+    "code": "T4_SHOES_PLATE_SET1",
+    "name": "Botas de Soldado",
+    "tier": 4,
+    "enchant": 0
+  },
+  {
+    "code": "T5_ARMOR_LEATHER_SET1",
+    "name": "Jaqueta de Caçador Mestre",
+    "tier": 5,
+    "enchant": 0
+  },
+  {
+    "code": "T4_BAG",
+    "name": "Bolsa Adepta",
+    "tier": 4,
+    "enchant": 0
+  },
+  {
+    "code": "T5_CAPE",
+    "name": "Capa Mestre",
+    "tier": 5,
+    "enchant": 0
+  },
+  {
+    "code": "T4_OFF_TORCH",
+    "name": "Lanterna",
+    "tier": 4,
+    "enchant": 0
+  },
+  {
+    "code": "T4_ORE",
+    "name": "Minério de Ferro",
+    "tier": 4,
+    "enchant": 0
+  },
+  {
+    "code": "T4_WOOD",
+    "name": "Madeira de Carvalho",
+    "tier": 4,
+    "enchant": 0
+  },
+  {
+    "code": "T4_HIDE",
+    "name": "Couro de Lobo",
+    "tier": 4,
+    "enchant": 0
+  },
+  {
+    "code": "T4_FIBER",
+    "name": "Fibra de Linho",
+    "tier": 4,
+    "enchant": 0
+  },
+  {
+    "code": "T4_ROCK",
+    "name": "Pedra Granito",
+    "tier": 4,
+    "enchant": 0
+  },
+  {
+    "code": "T6_MAIN_SWORD",
+    "name": "Espada Longa",
+    "tier": 6,
+    "enchant": 0
+  },
+  {
+    "code": "T7_MAIN_SWORD",
+    "name": "Espada Longa",
+    "tier": 7,
+    "enchant": 0
+  },
+  {
+    "code": "T8_MAIN_SWORD",
+    "name": "Espada Longa",
+    "tier": 8,
+    "enchant": 0
+  },
+  {
+    "code": "T5_MAIN_AXE",
+    "name": "Machado de Batalha",
+    "tier": 5,
+    "enchant": 0
+  },
+  {
+    "code": "T6_MAIN_AXE",
+    "name": "Machado de Batalha",
+    "tier": 6,
+    "enchant": 0
+  },
+  {
+    "code": "T7_MAIN_AXE",
+    "name": "Machado de Batalha",
+    "tier": 7,
+    "enchant": 0
+  },
+  {
+    "code": "T8_MAIN_AXE",
+    "name": "Machado de Batalha",
+    "tier": 8,
+    "enchant": 0
+  },
+  {
+    "code": "T4_2H_AXE",
+    "name": "Machado Grande",
+    "tier": 4,
+    "enchant": 0
+  },
+  {
+    "code": "T5_2H_AXE",
+    "name": "Machado Grande",
+    "tier": 5,
+    "enchant": 0
+  },
+  {
+    "code": "T6_2H_AXE",
+    "name": "Machado Grande",
+    "tier": 6,
+    "enchant": 0
+  },
+  {
+    "code": "T7_2H_AXE",
+    "name": "Machado Grande",
+    "tier": 7,
+    "enchant": 0
+  },
+  {
+    "code": "T8_2H_AXE",
+    "name": "Machado Grande",
+    "tier": 8,
+    "enchant": 0
+  },
+  {
+    "code": "T6_2H_BOW",
+    "name": "Arco de Guerra",
+    "tier": 6,
+    "enchant": 0
+  },
+  {
+    "code": "T7_2H_BOW",
+    "name": "Arco de Guerra",
+    "tier": 7,
+    "enchant": 0
+  },
+  {
+    "code": "T8_2H_BOW",
+    "name": "Arco de Guerra",
+    "tier": 8,
+    "enchant": 0
+  },
+  {
+    "code": "T4_MAIN_MACE",
+    "name": "Maça",
+    "tier": 4,
+    "enchant": 0
+  },
+  {
+    "code": "T5_MAIN_MACE",
+    "name": "Maça",
+    "tier": 5,
+    "enchant": 0
+  },
+  {
+    "code": "T6_MAIN_MACE",
+    "name": "Maça",
+    "tier": 6,
+    "enchant": 0
+  },
+  {
+    "code": "T7_MAIN_MACE",
+    "name": "Maça",
+    "tier": 7,
+    "enchant": 0
+  },
+  {
+    "code": "T8_MAIN_MACE",
+    "name": "Maça",
+    "tier": 8,
+    "enchant": 0
+  },
+  {
+    "code": "T4_2H_MACE",
+    "name": "Maça Pesada",
+    "tier": 4,
+    "enchant": 0
+  },
+  {
+    "code": "T5_2H_MACE",
+    "name": "Maça Pesada",
+    "tier": 5,
+    "enchant": 0
+  },
+  {
+    "code": "T6_2H_MACE",
+    "name": "Maça Pesada",
+    "tier": 6,
+    "enchant": 0
+  },
+  {
+    "code": "T7_2H_MACE",
+    "name": "Maça Pesada",
+    "tier": 7,
+    "enchant": 0
+  },
+  {
+    "code": "T8_2H_MACE",
+    "name": "Maça Pesada",
+    "tier": 8,
+    "enchant": 0
+  },
+  {
+    "code": "T4_MAIN_HAMMER",
+    "name": "Martelo",
+    "tier": 4,
+    "enchant": 0
+  },
+  {
+    "code": "T5_MAIN_HAMMER",
+    "name": "Martelo",
+    "tier": 5,
+    "enchant": 0
+  },
+  {
+    "code": "T6_MAIN_HAMMER",
+    "name": "Martelo",
+    "tier": 6,
+    "enchant": 0
+  },
+  {
+    "code": "T7_MAIN_HAMMER",
+    "name": "Martelo",
+    "tier": 7,
+    "enchant": 0
+  },
+  {
+    "code": "T8_MAIN_HAMMER",
+    "name": "Martelo",
+    "tier": 8,
+    "enchant": 0
+  },
+  {
+    "code": "T4_2H_HAMMER",
+    "name": "Martelo Grande",
+    "tier": 4,
+    "enchant": 0
+  },
+  {
+    "code": "T5_2H_HAMMER",
+    "name": "Martelo Grande",
+    "tier": 5,
+    "enchant": 0
+  },
+  {
+    "code": "T6_2H_HAMMER",
+    "name": "Martelo Grande",
+    "tier": 6,
+    "enchant": 0
+  },
+  {
+    "code": "T7_2H_HAMMER",
+    "name": "Martelo Grande",
+    "tier": 7,
+    "enchant": 0
+  },
+  {
+    "code": "T8_2H_HAMMER",
+    "name": "Martelo Grande",
+    "tier": 8,
+    "enchant": 0
+  },
+  {
+    "code": "T4_MAIN_SPEAR",
+    "name": "Lança",
+    "tier": 4,
+    "enchant": 0
+  },
+  {
+    "code": "T5_MAIN_SPEAR",
+    "name": "Lança",
+    "tier": 5,
+    "enchant": 0
+  },
+  {
+    "code": "T6_MAIN_SPEAR",
+    "name": "Lança",
+    "tier": 6,
+    "enchant": 0
+  },
+  {
+    "code": "T7_MAIN_SPEAR",
+    "name": "Lança",
+    "tier": 7,
+    "enchant": 0
+  },
+  {
+    "code": "T8_MAIN_SPEAR",
+    "name": "Lança",
+    "tier": 8,
+    "enchant": 0
+  },
+  {
+    "code": "T4_MAIN_DAGGER",
+    "name": "Adaga",
+    "tier": 4,
+    "enchant": 0
+  },
+  {
+    "code": "T5_MAIN_DAGGER",
+    "name": "Adaga",
+    "tier": 5,
+    "enchant": 0
+  },
+  {
+    "code": "T6_MAIN_DAGGER",
+    "name": "Adaga",
+    "tier": 6,
+    "enchant": 0
+  },
+  {
+    "code": "T7_MAIN_DAGGER",
+    "name": "Adaga",
+    "tier": 7,
+    "enchant": 0
+  },
+  {
+    "code": "T8_MAIN_DAGGER",
+    "name": "Adaga",
+    "tier": 8,
+    "enchant": 0
+  },
+  {
+    "code": "T4_MAIN_FIRESTAFF",
+    "name": "Cajado de Fogo",
+    "tier": 4,
+    "enchant": 0
+  },
+  {
+    "code": "T5_MAIN_FIRESTAFF",
+    "name": "Cajado de Fogo",
+    "tier": 5,
+    "enchant": 0
+  },
+  {
+    "code": "T6_MAIN_FIRESTAFF",
+    "name": "Cajado de Fogo",
+    "tier": 6,
+    "enchant": 0
+  },
+  {
+    "code": "T7_MAIN_FIRESTAFF",
+    "name": "Cajado de Fogo",
+    "tier": 7,
+    "enchant": 0
+  },
+  {
+    "code": "T8_MAIN_FIRESTAFF",
+    "name": "Cajado de Fogo",
+    "tier": 8,
+    "enchant": 0
+  },
+  {
+    "code": "T4_MAIN_HOLYSTAFF",
+    "name": "Cajado Sagrado",
+    "tier": 4,
+    "enchant": 0
+  },
+  {
+    "code": "T5_MAIN_HOLYSTAFF",
+    "name": "Cajado Sagrado",
+    "tier": 5,
+    "enchant": 0
+  },
+  {
+    "code": "T6_MAIN_HOLYSTAFF",
+    "name": "Cajado Sagrado",
+    "tier": 6,
+    "enchant": 0
+  },
+  {
+    "code": "T7_MAIN_HOLYSTAFF",
+    "name": "Cajado Sagrado",
+    "tier": 7,
+    "enchant": 0
+  },
+  {
+    "code": "T8_MAIN_HOLYSTAFF",
+    "name": "Cajado Sagrado",
+    "tier": 8,
+    "enchant": 0
+  },
+  {
+    "code": "T4_MAIN_NATURESTAFF",
+    "name": "Cajado da Natureza",
+    "tier": 4,
+    "enchant": 0
+  },
+  {
+    "code": "T5_MAIN_NATURESTAFF",
+    "name": "Cajado da Natureza",
+    "tier": 5,
+    "enchant": 0
+  },
+  {
+    "code": "T6_MAIN_NATURESTAFF",
+    "name": "Cajado da Natureza",
+    "tier": 6,
+    "enchant": 0
+  },
+  {
+    "code": "T7_MAIN_NATURESTAFF",
+    "name": "Cajado da Natureza",
+    "tier": 7,
+    "enchant": 0
+  },
+  {
+    "code": "T8_MAIN_NATURESTAFF",
+    "name": "Cajado da Natureza",
+    "tier": 8,
+    "enchant": 0
+  },
+  {
+    "code": "T4_MAIN_ARCANESTAFF",
+    "name": "Cajado Arcano",
+    "tier": 4,
+    "enchant": 0
+  },
+  {
+    "code": "T5_MAIN_ARCANESTAFF",
+    "name": "Cajado Arcano",
+    "tier": 5,
+    "enchant": 0
+  },
+  {
+    "code": "T6_MAIN_ARCANESTAFF",
+    "name": "Cajado Arcano",
+    "tier": 6,
+    "enchant": 0
+  },
+  {
+    "code": "T7_MAIN_ARCANESTAFF",
+    "name": "Cajado Arcano",
+    "tier": 7,
+    "enchant": 0
+  },
+  {
+    "code": "T8_MAIN_ARCANESTAFF",
+    "name": "Cajado Arcano",
+    "tier": 8,
+    "enchant": 0
+  },
+  {
+    "code": "T4_MAIN_FROSTSTAFF",
+    "name": "Cajado de Gelo",
+    "tier": 4,
+    "enchant": 0
+  },
+  {
+    "code": "T5_MAIN_FROSTSTAFF",
+    "name": "Cajado de Gelo",
+    "tier": 5,
+    "enchant": 0
+  },
+  {
+    "code": "T6_MAIN_FROSTSTAFF",
+    "name": "Cajado de Gelo",
+    "tier": 6,
+    "enchant": 0
+  },
+  {
+    "code": "T7_MAIN_FROSTSTAFF",
+    "name": "Cajado de Gelo",
+    "tier": 7,
+    "enchant": 0
+  },
+  {
+    "code": "T8_MAIN_FROSTSTAFF",
+    "name": "Cajado de Gelo",
+    "tier": 8,
+    "enchant": 0
+  },
+  {
+    "code": "T4_MAIN_CURSEDSTAFF",
+    "name": "Cajado Amaldiçoado",
+    "tier": 4,
+    "enchant": 0
+  },
+  {
+    "code": "T5_MAIN_CURSEDSTAFF",
+    "name": "Cajado Amaldiçoado",
+    "tier": 5,
+    "enchant": 0
+  },
+  {
+    "code": "T6_MAIN_CURSEDSTAFF",
+    "name": "Cajado Amaldiçoado",
+    "tier": 6,
+    "enchant": 0
+  },
+  {
+    "code": "T7_MAIN_CURSEDSTAFF",
+    "name": "Cajado Amaldiçoado",
+    "tier": 7,
+    "enchant": 0
+  },
+  {
+    "code": "T8_MAIN_CURSEDSTAFF",
+    "name": "Cajado Amaldiçoado",
+    "tier": 8,
+    "enchant": 0
+  },
+  {
+    "code": "T2_ORE",
+    "name": "Minério de Ferro",
+    "tier": 2,
+    "enchant": 0
+  },
+  {
+    "code": "T2_METALBAR",
+    "name": "Barra de Metal",
+    "tier": 2,
+    "enchant": 0
+  },
+  {
+    "code": "T3_ORE",
+    "name": "Minério de Ferro",
+    "tier": 3,
+    "enchant": 0
+  },
+  {
+    "code": "T3_METALBAR",
+    "name": "Barra de Metal",
+    "tier": 3,
+    "enchant": 0
+  },
+  {
+    "code": "T4_METALBAR",
+    "name": "Barra de Metal",
+    "tier": 4,
+    "enchant": 0
+  },
+  {
+    "code": "T5_ORE",
+    "name": "Minério de Ferro",
+    "tier": 5,
+    "enchant": 0
+  },
+  {
+    "code": "T5_METALBAR",
+    "name": "Barra de Metal",
+    "tier": 5,
+    "enchant": 0
+  },
+  {
+    "code": "T6_ORE",
+    "name": "Minério de Ferro",
+    "tier": 6,
+    "enchant": 0
+  },
+  {
+    "code": "T6_METALBAR",
+    "name": "Barra de Metal",
+    "tier": 6,
+    "enchant": 0
+  },
+  {
+    "code": "T7_ORE",
+    "name": "Minério de Ferro",
+    "tier": 7,
+    "enchant": 0
+  },
+  {
+    "code": "T7_METALBAR",
+    "name": "Barra de Metal",
+    "tier": 7,
+    "enchant": 0
+  },
+  {
+    "code": "T8_ORE",
+    "name": "Minério de Ferro",
+    "tier": 8,
+    "enchant": 0
+  },
+  {
+    "code": "T8_METALBAR",
+    "name": "Barra de Metal",
+    "tier": 8,
+    "enchant": 0
+  },
+  {
+    "code": "T2_WOOD",
+    "name": "Madeira de Carvalho",
+    "tier": 2,
+    "enchant": 0
+  },
+  {
+    "code": "T2_PLANKS",
+    "name": "Tábuas",
+    "tier": 2,
+    "enchant": 0
+  },
+  {
+    "code": "T3_WOOD",
+    "name": "Madeira de Carvalho",
+    "tier": 3,
+    "enchant": 0
+  },
+  {
+    "code": "T3_PLANKS",
+    "name": "Tábuas",
+    "tier": 3,
+    "enchant": 0
+  },
+  {
+    "code": "T4_PLANKS",
+    "name": "Tábuas",
+    "tier": 4,
+    "enchant": 0
+  },
+  {
+    "code": "T5_WOOD",
+    "name": "Madeira de Carvalho",
+    "tier": 5,
+    "enchant": 0
+  },
+  {
+    "code": "T5_PLANKS",
+    "name": "Tábuas",
+    "tier": 5,
+    "enchant": 0
+  },
+  {
+    "code": "T6_WOOD",
+    "name": "Madeira de Carvalho",
+    "tier": 6,
+    "enchant": 0
+  },
+  {
+    "code": "T6_PLANKS",
+    "name": "Tábuas",
+    "tier": 6,
+    "enchant": 0
+  },
+  {
+    "code": "T7_WOOD",
+    "name": "Madeira de Carvalho",
+    "tier": 7,
+    "enchant": 0
+  },
+  {
+    "code": "T7_PLANKS",
+    "name": "Tábuas",
+    "tier": 7,
+    "enchant": 0
+  },
+  {
+    "code": "T8_WOOD",
+    "name": "Madeira de Carvalho",
+    "tier": 8,
+    "enchant": 0
+  },
+  {
+    "code": "T8_PLANKS",
+    "name": "Tábuas",
+    "tier": 8,
+    "enchant": 0
+  },
+  {
+    "code": "T2_HIDE",
+    "name": "Couro de Lobo",
+    "tier": 2,
+    "enchant": 0
+  },
+  {
+    "code": "T2_LEATHER",
+    "name": "Couro Curtido",
+    "tier": 2,
+    "enchant": 0
+  },
+  {
+    "code": "T3_HIDE",
+    "name": "Couro de Lobo",
+    "tier": 3,
+    "enchant": 0
+  },
+  {
+    "code": "T3_LEATHER",
+    "name": "Couro Curtido",
+    "tier": 3,
+    "enchant": 0
+  },
+  {
+    "code": "T4_LEATHER",
+    "name": "Couro Curtido",
+    "tier": 4,
+    "enchant": 0
+  },
+  {
+    "code": "T5_HIDE",
+    "name": "Couro de Lobo",
+    "tier": 5,
+    "enchant": 0
+  },
+  {
+    "code": "T5_LEATHER",
+    "name": "Couro Curtido",
+    "tier": 5,
+    "enchant": 0
+  },
+  {
+    "code": "T6_HIDE",
+    "name": "Couro de Lobo",
+    "tier": 6,
+    "enchant": 0
+  },
+  {
+    "code": "T6_LEATHER",
+    "name": "Couro Curtido",
+    "tier": 6,
+    "enchant": 0
+  },
+  {
+    "code": "T7_HIDE",
+    "name": "Couro de Lobo",
+    "tier": 7,
+    "enchant": 0
+  },
+  {
+    "code": "T7_LEATHER",
+    "name": "Couro Curtido",
+    "tier": 7,
+    "enchant": 0
+  },
+  {
+    "code": "T8_HIDE",
+    "name": "Couro de Lobo",
+    "tier": 8,
+    "enchant": 0
+  },
+  {
+    "code": "T8_LEATHER",
+    "name": "Couro Curtido",
+    "tier": 8,
+    "enchant": 0
+  },
+  {
+    "code": "T2_FIBER",
+    "name": "Fibra de Linho",
+    "tier": 2,
+    "enchant": 0
+  },
+  {
+    "code": "T2_CLOTH",
+    "name": "Tecido",
+    "tier": 2,
+    "enchant": 0
+  },
+  {
+    "code": "T3_FIBER",
+    "name": "Fibra de Linho",
+    "tier": 3,
+    "enchant": 0
+  },
+  {
+    "code": "T3_CLOTH",
+    "name": "Tecido",
+    "tier": 3,
+    "enchant": 0
+  },
+  {
+    "code": "T4_CLOTH",
+    "name": "Tecido",
+    "tier": 4,
+    "enchant": 0
+  },
+  {
+    "code": "T5_FIBER",
+    "name": "Fibra de Linho",
+    "tier": 5,
+    "enchant": 0
+  },
+  {
+    "code": "T5_CLOTH",
+    "name": "Tecido",
+    "tier": 5,
+    "enchant": 0
+  },
+  {
+    "code": "T6_FIBER",
+    "name": "Fibra de Linho",
+    "tier": 6,
+    "enchant": 0
+  },
+  {
+    "code": "T6_CLOTH",
+    "name": "Tecido",
+    "tier": 6,
+    "enchant": 0
+  },
+  {
+    "code": "T7_FIBER",
+    "name": "Fibra de Linho",
+    "tier": 7,
+    "enchant": 0
+  },
+  {
+    "code": "T7_CLOTH",
+    "name": "Tecido",
+    "tier": 7,
+    "enchant": 0
+  },
+  {
+    "code": "T8_FIBER",
+    "name": "Fibra de Linho",
+    "tier": 8,
+    "enchant": 0
+  },
+  {
+    "code": "T8_CLOTH",
+    "name": "Tecido",
+    "tier": 8,
+    "enchant": 0
+  },
+  {
+    "code": "T2_ROCK",
+    "name": "Pedra Granito",
+    "tier": 2,
+    "enchant": 0
+  },
+  {
+    "code": "T2_STONEBLOCK",
+    "name": "Bloco de Pedra",
+    "tier": 2,
+    "enchant": 0
+  },
+  {
+    "code": "T3_ROCK",
+    "name": "Pedra Granito",
+    "tier": 3,
+    "enchant": 0
+  },
+  {
+    "code": "T3_STONEBLOCK",
+    "name": "Bloco de Pedra",
+    "tier": 3,
+    "enchant": 0
+  },
+  {
+    "code": "T4_STONEBLOCK",
+    "name": "Bloco de Pedra",
+    "tier": 4,
+    "enchant": 0
+  },
+  {
+    "code": "T5_ROCK",
+    "name": "Pedra Granito",
+    "tier": 5,
+    "enchant": 0
+  },
+  {
+    "code": "T5_STONEBLOCK",
+    "name": "Bloco de Pedra",
+    "tier": 5,
+    "enchant": 0
+  },
+  {
+    "code": "T6_ROCK",
+    "name": "Pedra Granito",
+    "tier": 6,
+    "enchant": 0
+  },
+  {
+    "code": "T6_STONEBLOCK",
+    "name": "Bloco de Pedra",
+    "tier": 6,
+    "enchant": 0
+  },
+  {
+    "code": "T7_ROCK",
+    "name": "Pedra Granito",
+    "tier": 7,
+    "enchant": 0
+  },
+  {
+    "code": "T7_STONEBLOCK",
+    "name": "Bloco de Pedra",
+    "tier": 7,
+    "enchant": 0
+  },
+  {
+    "code": "T8_ROCK",
+    "name": "Pedra Granito",
+    "tier": 8,
+    "enchant": 0
+  },
+  {
+    "code": "T8_STONEBLOCK",
+    "name": "Bloco de Pedra",
+    "tier": 8,
+    "enchant": 0
+  }
 ]
