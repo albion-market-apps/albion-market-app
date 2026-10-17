@@ -30,8 +30,9 @@
     "topOpportunitiesEmpty": "No profitable opportunity found with the data collected so far.",
     "refreshButton": "Refresh",
     "whereAmITitle": "Where are you?",
-    "whereAmISubtitle": "See the most profitable items to buy there and sell in another city.",
+    "whereAmISubtitle": "See the most profitable items to buy there. If you already know where you're headed, pick the destination too and make the trip count.",
     "citySelectPlaceholder": "Choose your city",
+    "destinationCitySelectPlaceholder": "Where you're headed (optional)",
     "whereAmIButton": "See best opportunities",
     "whereAmIEmpty": "No profitable opportunity found with the data collected so far.",
     "calculatorTitle": "Profit calculator",
@@ -42,6 +43,8 @@
     "calculatorProfit": "Estimated profit",
     "calculatorNotEnough": "Can't buy a single unit with that amount.",
     "pricesAreGross": "Table prices are raw market values (no tax). The calculator below already deducts the real tax.",
+    "tripBuyCityLabel": "I'll buy in",
+    "tripSellCityLabel": "I'll sell in",
     "sellInstantScenario": "Sell instantly",
     "sellOrderScenario": "Create a sell order",
     "sellOrderNote": "The order setup fee (2.5%) is charged when you create the order, even if it never sells — already deducted here, assuming it sells at the price shown.",
@@ -51,7 +54,9 @@
     "refiningTierColumn": "Tier",
     "refiningRawColumn": "Raw material (here)",
     "refiningRefinedColumn": "Refined material (best price)",
-    "refiningEmpty": "No raw material for sale in this city with a tracked matching refined material yet."
+    "refiningEmpty": "No raw material for sale in this city with a tracked matching refined material yet.",
+    "refiningBonusHint": "{city} has a refining bonus — the highlighted row below tends to pay off more (refining profit not calculated, depends on your focus/specialization/premium).",
+    "refiningBonusBadge": "Refining bonus here"
   },
   "header": {
     "localeLabel": "Language"

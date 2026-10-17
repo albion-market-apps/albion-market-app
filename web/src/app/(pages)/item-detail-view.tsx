@@ -70,6 +70,18 @@ export function ItemDetailView({
   const cheapestToBuy = bestTrade?.buy ?? null;
   const bestToSell = bestTrade?.sell ?? null;
 
+  // Seleção manual de rota (compra/venda) — começa na combinação ótima
+  // automática, mas o usuário pode trocar pra planejar a viagem que vai
+  // fazer de verdade (ex.: "vou comprar em Caerleon e vender em Lymhurst",
+  // mesmo que não seja o par matematicamente mais lucrativo).
+  const [selectedBuyCityId, setSelectedBuyCityId] = useState<string | null>(null);
+  const [selectedSellCityId, setSelectedSellCityId] = useState<string | null>(null);
+
+  const buyRow =
+    rows.find((row) => row.city.id === selectedBuyCityId) ?? cheapestToBuy ?? null;
+  const sellRow =
+    rows.find((row) => row.city.id === selectedSellCityId) ?? bestToSell ?? null;
+
   const favoriteDisabled = !isFavorite && !canAddFavorite;
 
   return (
@@ -140,18 +152,51 @@ export function ItemDetailView({
           </table>
           <p className="text-xs text-slate-500">{t("pricesAreGross")}</p>
 
-          {cheapestToBuy && bestToSell && (
-            <InvestmentCalculator
-              buyCity={cheapestToBuy.city.name}
-              buyPrice={cheapestToBuy.price.sell_price_min}
-              sellCity={bestToSell.city.name}
-              sellInstantPrice={netInstantSellPrice(bestToSell.price.buy_price_max)}
-              sellOrderPrice={
-                bestToSell.price.sell_price_min > 0
-                  ? netSellOrderPrice(bestToSell.price.sell_price_min)
-                  : null
-              }
-            />
+          {buyRow && sellRow && (
+            <div className="flex flex-col gap-3">
+              <div className="flex flex-col gap-3 sm:flex-row">
+                <label className="flex flex-1 flex-col gap-1 text-sm text-slate-400">
+                  {t("tripBuyCityLabel")}
+                  <select
+                    value={buyRow.city.id}
+                    onChange={(event) => setSelectedBuyCityId(event.target.value)}
+                    className="rounded border border-slate-700 bg-slate-900 px-3 py-2 text-slate-100"
+                  >
+                    {rows.map((row) => (
+                      <option key={row.city.id} value={row.city.id}>
+                        {row.city.name} ({row.price.sell_price_min.toLocaleString()})
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className="flex flex-1 flex-col gap-1 text-sm text-slate-400">
+                  {t("tripSellCityLabel")}
+                  <select
+                    value={sellRow.city.id}
+                    onChange={(event) => setSelectedSellCityId(event.target.value)}
+                    className="rounded border border-slate-700 bg-slate-900 px-3 py-2 text-slate-100"
+                  >
+                    {rows.map((row) => (
+                      <option key={row.city.id} value={row.city.id}>
+                        {row.city.name} ({netInstantSellPrice(row.price.buy_price_max).toLocaleString()})
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              </div>
+
+              <InvestmentCalculator
+                buyCity={buyRow.city.name}
+                buyPrice={buyRow.price.sell_price_min}
+                sellCity={sellRow.city.name}
+                sellInstantPrice={netInstantSellPrice(sellRow.price.buy_price_max)}
+                sellOrderPrice={
+                  sellRow.price.sell_price_min > 0
+                    ? netSellOrderPrice(sellRow.price.sell_price_min)
+                    : null
+                }
+              />
+            </div>
           )}
         </>
       )}

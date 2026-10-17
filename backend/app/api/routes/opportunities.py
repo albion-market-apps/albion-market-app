@@ -107,14 +107,20 @@ def favorites_opportunities(
 @router.get("/best-from-city", response_model=list[TradeOpportunityOut])
 def best_from_city(
     city_id: UUID = Query(..., description="cidade onde o usuário está agora"),
+    destination_city_id: UUID
+    | None = Query(default=None, description="pra onde vai (opcional) — trava a rota inteira"),
     limit: int = Query(default=5, ge=1, le=20),
     db: Session = Depends(get_tenant_db),
     tenant_id: UUID = Depends(get_current_tenant_id),
 ) -> list[TradeOpportunityOut]:
-    """Ranking dos itens mais lucrativos pra comprar em `city_id` agora e
-    vender em outra cidade — todo o catálogo do tenant com preço coletado,
-    ordenado por lucro decrescente (só lucro positivo entra)."""
-    trades = best_trades_from_city(db, tenant_id, city_id, limit=limit)
+    """Ranking dos itens mais lucrativos pra comprar em `city_id` agora —
+    sem `destination_city_id`, vender em qualquer outra cidade (melhor
+    destino automático); com `destination_city_id`, trava a rota inteira
+    ("estou em X, vou pra Y, o que levo?"). Ordenado por lucro decrescente
+    (só lucro positivo entra)."""
+    trades = best_trades_from_city(
+        db, tenant_id, city_id, destination_city_id=destination_city_id, limit=limit
+    )
     return _enrich(db, tenant_id, trades)
 
 

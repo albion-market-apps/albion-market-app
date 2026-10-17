@@ -156,11 +156,12 @@ export function itemFromTrade(trade: TradeOpportunity): ItemResult {
 
 export async function fetchBestFromCity(
   cityId: string,
+  destinationCityId?: string,
   limit = 5,
 ): Promise<TradeOpportunity[]> {
-  const response = await fetch(
-    `/api/opportunities/best-from-city?city_id=${encodeURIComponent(cityId)}&limit=${limit}`,
-  );
+  const params = new URLSearchParams({ city_id: cityId, limit: String(limit) });
+  if (destinationCityId) params.set("destination_city_id", destinationCityId);
+  const response = await fetch(`/api/opportunities/best-from-city?${params.toString()}`);
   if (!response.ok) {
     throw new Error(`Falha ao buscar melhores oportunidades: ${response.status}`);
   }

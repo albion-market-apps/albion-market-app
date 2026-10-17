@@ -64,10 +64,12 @@ export function HomeView({
 
   const { data: cities } = useSWR("cities", fetchCities);
   const [selectedCityId, setSelectedCityId] = useState("");
+  const [selectedDestinationCityId, setSelectedDestinationCityId] = useState("");
   const [queriedCityId, setQueriedCityId] = useState<string | null>(null);
+  const [queriedDestinationCityId, setQueriedDestinationCityId] = useState<string | null>(null);
   const { data: bestOpportunities, isLoading: isLoadingBest } = useSWR(
-    queriedCityId ? ["best-from-city", queriedCityId] : null,
-    () => fetchBestFromCity(queriedCityId!),
+    queriedCityId ? ["best-from-city", queriedCityId, queriedDestinationCityId] : null,
+    () => fetchBestFromCity(queriedCityId!, queriedDestinationCityId ?? undefined),
   );
   const { data: refiningRows, isLoading: isLoadingRefining } = useSWR(
     queriedCityId ? ["refining-at-city", queriedCityId] : null,
@@ -146,7 +148,7 @@ export function HomeView({
           <h2 className="text-lg font-medium">{t("whereAmITitle")}</h2>
           <p className="text-sm text-slate-400">{t("whereAmISubtitle")}</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-col gap-2 sm:flex-row">
           <select
             value={selectedCityId}
             onChange={(event) => setSelectedCityId(event.target.value)}
@@ -159,9 +161,26 @@ export function HomeView({
               </option>
             ))}
           </select>
+          <select
+            value={selectedDestinationCityId}
+            onChange={(event) => setSelectedDestinationCityId(event.target.value)}
+            className="flex-1 rounded border border-slate-700 bg-slate-900 px-3 py-2 text-slate-100"
+          >
+            <option value="">{t("destinationCitySelectPlaceholder")}</option>
+            {(cities ?? [])
+              .filter((city) => city.id !== selectedCityId)
+              .map((city) => (
+                <option key={city.id} value={city.id}>
+                  {city.name}
+                </option>
+              ))}
+          </select>
           <button
             disabled={!selectedCityId}
-            onClick={() => setQueriedCityId(selectedCityId)}
+            onClick={() => {
+              setQueriedCityId(selectedCityId);
+              setQueriedDestinationCityId(selectedDestinationCityId || null);
+            }}
             className="rounded bg-emerald-600 px-4 py-2 font-medium text-white hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {t("whereAmIButton")}
@@ -196,6 +215,7 @@ export function HomeView({
             rows={refiningRows}
             emptyMessage={t("refiningEmpty")}
             onSelectItem={onSelectItem}
+            originCityName={(cities ?? []).find((city) => city.id === queriedCityId)?.name ?? null}
           />
         )}
       </section>
@@ -261,14 +281,35 @@ export function HomeView({
   );
 }
 
+/** Cada cidade capital tem bônus de refino pra UM dos 5 recursos — mapeamento
+ * fixo do jogo (não muda, não precisa vir da API). Comprar a matéria-prima
+ * bonificada e refinar ali costuma compensar mais do que em qualquer outra
+ * cidade, mas **não calculamos o lucro disso** (mesma decisão do turno 13:
+ * a taxa de retorno real do bônus depende de foco/especialização/premium,
+ * que a API de preços não sabe) — só destacamos a linha pra pessoa
+ * considerar. */
+const REFINING_BONUS_CITY: Record<string, string> = {
+  "Fort Sterling": "WOOD",
+  Lymhurst: "FIBER",
+  Bridgewatch: "ROCK",
+  Martlock: "HIDE",
+  Thetford: "ORE",
+};
+
+function resourceSuffix(code: string): string {
+  return code.replace(/^T\d+_/, "");
+}
+
 function RefiningTable({
   rows,
   emptyMessage,
   onSelectItem,
+  originCityName,
 }: {
   rows: RefiningComparison[];
   emptyMessage: string;
   onSelectItem: (item: ItemResult) => void;
+  originCityName: string | null;
 }) {
   const t = useTranslations("home");
 
@@ -276,56 +317,80 @@ function RefiningTable({
     return <p className="text-slate-400">{emptyMessage}</p>;
   }
 
+  const bonusSuffix = originCityName ? REFINING_BONUS_CITY[originCityName] : undefined;
+
   return (
-    <table className="w-full border-collapse overflow-hidden rounded border border-slate-800 text-left">
-      <thead className="bg-slate-900 text-sm text-slate-400">
-        <tr>
-          <th className="px-3 py-2">{t("refiningTierColumn")}</th>
-          <th className="px-3 py-2">{t("refiningRawColumn")}</th>
-          <th className="px-3 py-2">{t("refiningRefinedColumn")}</th>
-        </tr>
-      </thead>
-      <tbody>
-        {rows.map((row) => (
-          <tr key={`${row.raw_item_id}-${row.refined_item_id}`} className="border-t border-slate-800">
-            <td className="px-3 py-2 text-slate-400">T{row.tier}</td>
-            <td className="px-3 py-2">
-              <button
-                onClick={() =>
-                  onSelectItem({
-                    id: row.raw_item_id,
-                    code: row.raw_code,
-                    name: row.raw_name,
-                    tier: row.tier,
-                    enchant: 0,
-                  })
-                }
-                className="text-left hover:text-emerald-400"
-              >
-                {row.raw_name} — {row.raw_price.toLocaleString()}
-              </button>
-            </td>
-            <td className="px-3 py-2">
-              <button
-                onClick={() =>
-                  onSelectItem({
-                    id: row.refined_item_id,
-                    code: row.refined_code,
-                    name: row.refined_name,
-                    tier: row.tier,
-                    enchant: 0,
-                  })
-                }
-                className="text-left hover:text-emerald-400"
-              >
-                {row.refined_name} — {row.refined_best_price.toLocaleString()} (
-                {row.refined_best_city_name})
-              </button>
-            </td>
+    <div className="flex flex-col gap-2">
+      {bonusSuffix && (
+        <p className="text-sm text-emerald-400">
+          {t("refiningBonusHint", { city: originCityName })}
+        </p>
+      )}
+      <table className="w-full border-collapse overflow-hidden rounded border border-slate-800 text-left">
+        <thead className="bg-slate-900 text-sm text-slate-400">
+          <tr>
+            <th className="px-3 py-2">{t("refiningTierColumn")}</th>
+            <th className="px-3 py-2">{t("refiningRawColumn")}</th>
+            <th className="px-3 py-2">{t("refiningRefinedColumn")}</th>
           </tr>
-        ))}
-      </tbody>
-    </table>
+        </thead>
+        <tbody>
+          {rows.map((row) => {
+            const isBonusRow = bonusSuffix !== undefined && resourceSuffix(row.raw_code) === bonusSuffix;
+            return (
+              <tr
+                key={`${row.raw_item_id}-${row.refined_item_id}`}
+                className={
+                  isBonusRow
+                    ? "border-t border-emerald-800 bg-emerald-950/40"
+                    : "border-t border-slate-800"
+                }
+              >
+                <td className="px-3 py-2 text-slate-400">T{row.tier}</td>
+                <td className="px-3 py-2">
+                  <button
+                    onClick={() =>
+                      onSelectItem({
+                        id: row.raw_item_id,
+                        code: row.raw_code,
+                        name: row.raw_name,
+                        tier: row.tier,
+                        enchant: 0,
+                      })
+                    }
+                    className="text-left hover:text-emerald-400"
+                  >
+                    {row.raw_name} — {row.raw_price.toLocaleString()}
+                  </button>
+                  {isBonusRow && (
+                    <span className="ml-2 rounded bg-emerald-900 px-2 py-0.5 text-xs text-emerald-300">
+                      {t("refiningBonusBadge")}
+                    </span>
+                  )}
+                </td>
+                <td className="px-3 py-2">
+                  <button
+                    onClick={() =>
+                      onSelectItem({
+                        id: row.refined_item_id,
+                        code: row.refined_code,
+                        name: row.refined_name,
+                        tier: row.tier,
+                        enchant: 0,
+                      })
+                    }
+                    className="text-left hover:text-emerald-400"
+                  >
+                    {row.refined_name} — {row.refined_best_price.toLocaleString()} (
+                    {row.refined_best_city_name})
+                  </button>
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
   );
 }
 

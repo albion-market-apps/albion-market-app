@@ -283,6 +283,58 @@ turno 10); é só um stub por enquanto, não bloqueia o MVP.
 - [ ] Recursos de produção (Neon/Upstash/Render/Vercel) nunca compartilhados
       com outro projeto do mantenedor — pendente (depende do Vercel acima).
 
+## Changelog de setup (turno 17 — escolher a rota manualmente + bônus de refino por cidade)
+
+**Pedidos do turno** (três, encadeados):
+1. Na tela de detalhe do item, poder escolher manualmente em qual cidade
+   comprar e em qual vender — não ficar só com o par "ótimo" automático.
+2. Na seção "Onde você está", poder informar também pra onde vai (não só
+   de onde sai), pra ver o que vale a pena levar numa viagem já decidida.
+3. Considerar sugerir refino: cada cidade capital tem bônus de refino pra
+   um recurso (ex. Lymhurst = Fibra→Tecido) — se a origem for uma cidade
+   com bônus, pode compensar comprar a matéria-prima ali, refinar e vender
+   o material refinado em outra cidade.
+
+**1. Seleção manual de rota** (`web/src/app/(pages)/item-detail-view.tsx`):
+dois `<select>` novos ("Vou comprar em" / "Vou vender em") na tela de
+detalhe, pré-selecionados com o par ótimo automático (`findBestTrade`),
+mas trocáveis livremente — a calculadora passa a usar os preços da cidade
+escolhida, não mais só o par mais lucrativo. A tabela de comparação
+continua mostrando os badges do par automático (informativo), só a
+calculadora reage à escolha manual.
+
+**2. Destino travado em "onde você está"**:
+- `backend/app/services/opportunities.py`: `best_trade_for_item` ganhou
+  `destination_city_id` opcional — quando definido, a cidade de venda
+  também fica travada (antes só a de compra travava). `best_trades_from_city`
+  e a rota `GET /opportunities/best-from-city` repassam o parâmetro novo
+  (`destination_city_id`, opcional).
+- Front: segundo `<select>` "Pra onde vai (opcional)" ao lado do seletor
+  de origem em "Onde você está" — filtra a própria origem da lista pra
+  não deixar escolher a mesma cidade dos dois lados. Deixado em branco,
+  comportamento não muda (melhor destino automático).
+- Testes novos: `test_best_from_city_locks_destination_when_given`,
+  `test_best_from_city_destination_without_offer_is_empty`.
+
+**3. Bônus de refino por cidade** (`web/src/app/(pages)/home-view.tsx`):
+mapeamento fixo (`REFINING_BONUS_CITY`, dado do próprio jogo, não muda —
+Fort Sterling=madeira, Lymhurst=fibra, Bridgewatch=pedra, Martlock=couro,
+Thetford=minério) usado só pra **destacar visualmente** as linhas da
+tabela "Matérias-primas pra refino" que correspondem ao bônus da cidade de
+origem escolhida, com uma frase de contexto. **Não calcula lucro nenhum**
+do bônus (mesma decisão do turno 13 — taxa de retorno real do refino
+depende de foco/especialização/premium, que a API de preços não sabe) —
+só aponta "essa linha aqui costuma compensar mais".
+
+**Validado localmente**: testei o seletor manual de rota, o filtro de
+destino (confirmei que não quebra contra a API ainda sem o parâmetro novo
+— FastAPI ignora query param desconhecido, sem erro) e o destaque de
+bônus de refino (Lymhurst → todas as linhas de Fibra/Tecido em todas as
+tiers destacadas corretamente) contra a API real do Render, com a app
+local (`web/.env.local`, não commitado) depois de acordar o serviço (tinha
+"dormido" por inatividade — comportamento normal do free tier, não é
+bug). `tsc --noEmit` e `pnpm lint` limpos; `python3 -m py_compile` limpo.
+
 ## Changelog de setup (turno 16 — taxa real do mercado: venda instantânea x pedido de venda)
 
 **Pedido do turno**: usuário perguntou se compra/venda consideravam

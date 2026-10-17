@@ -115,6 +115,7 @@ def best_trade_for_item(
     item_id: UUID,
     prices_by_city: dict[UUID, dict],
     origin_city_id: UUID | None,
+    destination_city_id: UUID | None = None,
 ) -> TradeOpportunity | None:
     """Melhor par (cidade de compra, cidade de venda) pra um item — sempre
     cidades **diferentes**: comprar e "vender" na mesma cidade não é
@@ -127,13 +128,17 @@ def best_trade_for_item(
     combinações possíveis) — usado na lista de favoritos. Com
     `origin_city_id` definido, a compra é travada naquela cidade (o
     usuário já disse onde está) — usado em "melhor item pra comprar daqui".
-    Busca exaustiva sobre todos os pares (compra, venda) — o catálogo de
-    cidades é pequeno (7), então O(n²) é barato e evita o erro de escolher
-    a melhor cidade de compra e a melhor de venda de forma independente
-    (que pode "empatar" na mesma cidade mesmo quando outra combinação daria
-    mais lucro, ou pior, mais prejuízo). Cidades sem oferta de compra/venda
-    (`== 0`, ver `app.services.collector`: zero significa "sem dado", não
-    preço real) são ignoradas dos dois lados.
+    `destination_city_id` trava também a cidade de venda — usado quando o
+    usuário já sabe as duas pontas da viagem ("estou em X, vou pra Y, o que
+    levo?"); deixado em `None`, a cidade de venda fica livre (melhor
+    destino, escolhido automaticamente). Busca exaustiva sobre todos os
+    pares (compra, venda) — o catálogo de cidades é pequeno (7), então
+    O(n²) é barato e evita o erro de escolher a melhor cidade de compra e a
+    melhor de venda de forma independente (que pode "empatar" na mesma
+    cidade mesmo quando outra combinação daria mais lucro, ou pior, mais
+    prejuízo). Cidades sem oferta de compra/venda (`== 0`, ver
+    `app.services.collector`: zero significa "sem dado", não preço real)
+    são ignoradas dos dois lados.
     """
     buyable = {c: p for c, p in prices_by_city.items() if p["sell_price_min"] > 0}
     sellable = {c: p for c, p in prices_by_city.items() if p["buy_price_max"] > 0}
@@ -144,6 +149,11 @@ def best_trade_for_item(
         buy_candidates = {origin_city_id: buyable[origin_city_id]}
     else:
         buy_candidates = buyable
+
+    if destination_city_id is not None:
+        if destination_city_id not in sellable:
+            return None
+        sellable = {destination_city_id: sellable[destination_city_id]}
 
     best: TradeOpportunity | None = None
     for buy_city_id, buy_entry in buy_candidates.items():
@@ -189,12 +199,16 @@ def best_trades_for_items(
 
 
 def _rank_opportunities(
-    db: Session, tenant_id: UUID, origin_city_id: UUID | None, limit: int
+    db: Session,
+    tenant_id: UUID,
+    origin_city_id: UUID | None,
+    destination_city_id: UUID | None,
+    limit: int,
 ) -> list[TradeOpportunity]:
     prices = latest_quality1_prices(db, tenant_id)
     opportunities = []
     for item_id, prices_by_city in prices.items():
-        trade = best_trade_for_item(item_id, prices_by_city, origin_city_id)
+        trade = best_trade_for_item(item_id, prices_by_city, origin_city_id, destination_city_id)
         if trade is not None and trade.profit > 0:
             opportunities.append(trade)
     opportunities.sort(key=lambda trade: trade.profit, reverse=True)
@@ -202,12 +216,19 @@ def _rank_opportunities(
 
 
 def best_trades_from_city(
-    db: Session, tenant_id: UUID, origin_city_id: UUID, limit: int = 5
+    db: Session,
+    tenant_id: UUID,
+    origin_city_id: UUID,
+    destination_city_id: UUID | None = None,
+    limit: int = 5,
 ) -> list[TradeOpportunity]:
     """Ranking dos itens mais lucrativos pra comprar em `origin_city_id`
-    agora e vender em outra cidade — todo o catálogo do tenant com preço
-    coletado, ordenado por lucro decrescente."""
-    return _rank_opportunities(db, tenant_id, origin_city_id, limit)
+    agora — com `destination_city_id=None`, vender em qualquer outra
+    cidade (melhor destino escolhido automaticamente); com
+    `destination_city_id` definido, trava a viagem inteira ("estou em X,
+    vou pra Y, o que levo pra ganhar uma prata?") e ranqueia só pelos itens
+    que valem a pena nessa rota específica."""
+    return _rank_opportunities(db, tenant_id, origin_city_id, destination_city_id, limit)
 
 
 def best_trades_global(db: Session, tenant_id: UUID, limit: int = 5) -> list[TradeOpportunity]:
@@ -218,4 +239,4 @@ def best_trades_global(db: Session, tenant_id: UUID, limit: int = 5) -> list[Tra
     cacheada por hora: o catálogo é pequeno o bastante (algumas centenas de
     itens × até 7 cidades) pra isso custar bem menos que 1s, então não tem
     motivo pra servir um dado mais velho do que o necessário."""
-    return _rank_opportunities(db, tenant_id, None, limit)
+    return _rank_opportunities(db, tenant_id, None, None, limit)

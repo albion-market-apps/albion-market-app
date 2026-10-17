@@ -88,6 +88,40 @@ def test_best_from_city_ranks_by_profit_and_locks_buy_city(
     assert body[0]["profit"] == 719
 
 
+def test_best_from_city_locks_destination_when_given(
+    client: TestClient, db: Session, world: dict
+) -> None:
+    _seed_cheap_and_expensive_city(db, world)
+
+    response = client.get(
+        "/opportunities/best-from-city",
+        params={"city_id": str(world["city_a"]), "destination_city_id": str(world["city_a2"])},
+        headers=_headers(),
+    )
+    assert response.status_code == 200
+    body = response.json()
+    assert len(body) == 1
+    assert body[0]["buy_city_id"] == str(world["city_a"])
+    assert body[0]["sell_city_id"] == str(world["city_a2"])
+    assert body[0]["profit"] == 719
+
+
+def test_best_from_city_destination_without_offer_is_empty(
+    client: TestClient, db: Session, world: dict
+) -> None:
+    # item_a só tem oferta em city_a e city_a2 — pedir pra vender em city_b
+    # (sem nenhum dado desse item) não pode achar rota nenhuma.
+    _seed_cheap_and_expensive_city(db, world)
+
+    response = client.get(
+        "/opportunities/best-from-city",
+        params={"city_id": str(world["city_a"]), "destination_city_id": str(world["city_b"])},
+        headers=_headers(),
+    )
+    assert response.status_code == 200
+    assert response.json() == []
+
+
 def test_best_from_city_excludes_negative_profit(
     client: TestClient, db: Session, world: dict
 ) -> None:

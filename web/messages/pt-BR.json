@@ -30,8 +30,9 @@
     "topOpportunitiesEmpty": "Nenhuma oportunidade lucrativa encontrada com os dados coletados até agora.",
     "refreshButton": "Atualizar",
     "whereAmITitle": "Onde você está?",
-    "whereAmISubtitle": "Veja os itens mais lucrativos pra comprar aí e vender em outra cidade.",
+    "whereAmISubtitle": "Veja os itens mais lucrativos pra comprar aí. Se já souber pra onde vai, escolha o destino também e aproveite a viagem.",
     "citySelectPlaceholder": "Escolha sua cidade",
+    "destinationCitySelectPlaceholder": "Pra onde vai (opcional)",
     "whereAmIButton": "Ver melhores oportunidades",
     "whereAmIEmpty": "Nenhuma oportunidade lucrativa encontrada com os dados coletados até agora.",
     "calculatorTitle": "Calculadora de lucro",
@@ -42,6 +43,8 @@
     "calculatorProfit": "Lucro estimado",
     "calculatorNotEnough": "Não dá pra comprar nenhuma unidade com esse valor.",
     "pricesAreGross": "Preços da tabela são os valores brutos do mercado (sem taxa). A calculadora abaixo já desconta a taxa de verdade.",
+    "tripBuyCityLabel": "Vou comprar em",
+    "tripSellCityLabel": "Vou vender em",
     "sellInstantScenario": "Vender na hora",
     "sellOrderScenario": "Criar pedido de venda",
     "sellOrderNote": "Taxa de ordem (2,5%) é cobrada ao criar o pedido, mesmo que ele nunca venda — valor já descontado aqui, assumindo que vende no preço mostrado.",
@@ -51,7 +54,9 @@
     "refiningTierColumn": "Tier",
     "refiningRawColumn": "Matéria-prima (aqui)",
     "refiningRefinedColumn": "Material refinado (melhor preço)",
-    "refiningEmpty": "Nenhuma matéria-prima à venda nessa cidade com material refinado correspondente rastreado ainda."
+    "refiningEmpty": "Nenhuma matéria-prima à venda nessa cidade com material refinado correspondente rastreado ainda.",
+    "refiningBonusHint": "{city} tem bônus de refino — a linha destacada abaixo costuma compensar mais (lucro de refino não calculado, depende do seu foco/especialização/premium).",
+    "refiningBonusBadge": "Bônus de refino aqui"
   },
   "header": {
     "localeLabel": "Idioma"
