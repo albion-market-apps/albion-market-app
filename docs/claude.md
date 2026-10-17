@@ -349,6 +349,17 @@ py_compile` limpo nos arquivos novos/alterados. Sem Postgres/Docker neste
 ambiente pra rodar os testes de integração — igual aos turnos anteriores,
 verificação final é contra o deploy real.
 
+**Confirmado no deploy real**: depois do push, `GET /items?query=machado`
+voltou **10** resultados (5 tiers × 2 famílias), `GET /items?query=arco`
+voltou **5** (T4-T8) — confirma que o "só 1 resultado" era mesmo só
+catálogo pequeno. `GET /refining?city_id=<Lymhurst>` voltou 26 pares
+matéria-prima/refinado reais (T2 a T8 — alguns tiers mais altos ainda sem
+dado em todas as 5 famílias porque o coletor ainda não completou um ciclo
+cobrindo tudo, esperado dado o catálogo ter crescido 8x). Testado no site
+publicado: seção "Matérias-primas pra refino" renderizou a tabela inteira
+corretamente abaixo de "onde eu estou", cada linha com tier/preço/cidade
+batendo com o JSON cru da API.
+
 ## Changelog de setup (turno 12 — favoritos, calculadora de lucro, autocomplete e "onde eu estou")
 
 **Pedido do turno**: usuário pediu quatro coisas na sequência, todas em cima
