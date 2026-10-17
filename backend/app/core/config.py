@@ -18,6 +18,7 @@ class Settings(BaseSettings):
     api_rate_limit: int = 120
     sentry_dsn: str = ""
     albion_base_url: str = "https://www.albion-online-data.com/api/v2/stats"
+    poll_interval_seconds: int = 300
 
 
 @lru_cache

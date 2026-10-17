@@ -4,7 +4,17 @@
     "searchPlaceholder": "Search item (e.g. Master's Broadsword)",
     "searchButton": "Search",
     "noResults": "No items found.",
-    "resultsTitle": "Results"
+    "resultsTitle": "Results",
+    "comparisonTitle": "Price comparison across cities",
+    "comparisonSubtitle": "{item}",
+    "cityColumn": "City",
+    "sellColumn": "Sell price (buy there)",
+    "buyColumn": "Buy order (sell there)",
+    "updatedColumn": "Updated",
+    "bestToBuy": "Cheapest to buy",
+    "bestToSell": "Best to sell",
+    "noPriceData": "No prices collected for this item yet. The collector runs every few minutes — check back soon.",
+    "backToSearch": "Back to search"
   },
   "header": {
     "localeLabel": "Language"

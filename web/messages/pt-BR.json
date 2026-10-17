@@ -4,7 +4,17 @@
     "searchPlaceholder": "Buscar item (ex: Espada Longa Mestre)",
     "searchButton": "Buscar",
     "noResults": "Nenhum item encontrado.",
-    "resultsTitle": "Resultados"
+    "resultsTitle": "Resultados",
+    "comparisonTitle": "Comparação de preços entre cidades",
+    "comparisonSubtitle": "{item}",
+    "cityColumn": "Cidade",
+    "sellColumn": "Preço de venda (comprar lá)",
+    "buyColumn": "Oferta de compra (vender lá)",
+    "updatedColumn": "Atualizado",
+    "bestToBuy": "Mais barato pra comprar",
+    "bestToSell": "Melhor pra vender",
+    "noPriceData": "Ainda não há preços coletados pra este item. O coletor roda a cada poucos minutos — volte a checar em breve.",
+    "backToSearch": "Voltar pra busca"
   },
   "header": {
     "localeLabel": "Idioma"

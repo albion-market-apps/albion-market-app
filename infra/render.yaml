@@ -1,11 +1,17 @@
-# Render Blueprint — cria os serviços `albion-api` (web, com healthcheck) e
-# `albion-worker` (background worker) a partir dos Dockerfiles já usados no
-# Compose local. Valores com `sync: false` precisam ser preenchidos no
-# dashboard do Render (nunca commitados aqui) — ver docs/DEPLOY_FREE_TIERS.md.
+# Render Blueprint — cria o serviço `albion-api` (web, com healthcheck) a
+# partir do Dockerfile já usado no Compose local. Valores com `sync: false`
+# precisam ser preenchidos no dashboard do Render (nunca commitados aqui) —
+# ver docs/DEPLOY_FREE_TIERS.md.
 #
 # Uso: Render → New → Blueprint → aponta pro repo → ele lê este arquivo.
-# TODO: ainda não testado contra uma conta Render real (sem acesso neste
-# ambiente) — revisar nomes/plano gratuito ("free") se o Render mudar algo.
+#
+# Sem serviço `worker` aqui: **testado contra o Render real no turno 10** —
+# "Background Worker" não está disponível no plano free ("service type is
+# not available for this plan"). A coleta de preços roda em processo dentro
+# da própria API (`app/services/collector.py` + loop no lifespan de
+# `app/main.py`), não como processo separado — ver changelog turno 11.
+# `infra/worker.Dockerfile` e `worker/` continuam existindo só para quem
+# rodar via Docker Compose local ou subir pra um plano pago no futuro.
 
 services:
   - type: web
@@ -26,21 +32,7 @@ services:
         value: "60"
       - key: ALBION_BASE_URL
         value: https://www.albion-online-data.com/api/v2/stats
+      - key: POLL_INTERVAL_SECONDS
+        value: "300"
       - key: SENTRY_DSN
         sync: false
-
-  - type: worker
-    name: albion-worker
-    runtime: docker
-    plan: free
-    dockerfilePath: ./infra/worker.Dockerfile
-    dockerContext: .
-    envVars:
-      - key: DATABASE_URL
-        sync: false
-      - key: REDIS_URL
-        sync: false
-      - key: TENANT_DEFAULT_ID
-        sync: false
-      - key: ALBION_BASE_URL
-        value: https://www.albion-online-data.com/api/v2/stats

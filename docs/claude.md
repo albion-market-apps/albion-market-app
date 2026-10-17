@@ -283,6 +283,77 @@ turno 10); é só um stub por enquanto, não bloqueia o MVP.
 - [ ] Recursos de produção (Neon/Upstash/Render/Vercel) nunca compartilhados
       com outro projeto do mantenedor — pendente (depende do Vercel acima).
 
+## Changelog de setup (turno 11 — comparação de preços entre cidades)
+
+**Pedido do turno**: usuário lembrou o objetivo real da página — não é só
+buscar item, é **comparar o preço do item entre as cidades**. A home até
+turno 10 só listava itens da busca; não mostrava preço nenhum.
+
+**Gap real encontrado investigando**: existia um caminho inteiro de dados
+que nunca se conectava.
+- `worker/worker_app/collector.py` já chamava a API real da AODP
+  (`fetch_prices`), mas só **publicava num canal Redis** (`prices_updates`)
+  — nada na base de código *assinava* esse canal. `record_prices()` (grava
+  no Postgres) só era chamado pelos testes de integração, nunca em
+  produção. Ou seja: mesmo se o `albion-worker` tivesse conseguido subir no
+  Render, a tabela `prices` continuaria vazia pra sempre.
+- Não tinha endpoint `/cities` — sem isso, o front não tem como traduzir
+  `city_id` em nome de cidade pra exibir a comparação.
+
+**Decisão de arquitetura**: em vez de corrigir o worker separado (que de
+qualquer forma não sobe no Render free — ver turno 10), a coleta agora roda
+**dentro do processo da própria API**:
+- `backend/app/services/collector.py` (novo): busca preços reais na AODP
+  pra todo o catálogo do tenant (todos os itens × todas as cidades, numa
+  única chamada) e persiste via `record_prices`. Resolve o `unique_name`
+  que a AODP espera (`code` puro pra `enchant=0`, `code@enchant` pros
+  níveis encantados — convenção do próprio jogo, não documentada em lugar
+  óbvio, só percebida lendo a API real). Ignora linhas sem nenhuma oferta
+  (`sell_price_min == 0 and buy_price_max == 0`) — gravar isso faria "sem
+  dado" parecer um preço real de zero.
+- `backend/app/main.py`: `lifespan` novo dispara um loop assíncrono
+  (`asyncio.create_task`) que chama o coletor a cada `POLL_INTERVAL_SECONDS`
+  (default 300s), via `asyncio.to_thread` (o coletor é síncrono — SQLAlchemy
+  sync + httpx sync — não pode bloquear o event loop da API).
+- `infra/render.yaml`: removido o serviço `albion-worker` do Blueprint (não
+  disponível no free, confirmado no turno 10 — não faz sentido manter
+  declarado). `worker/` e `infra/worker.Dockerfile` continuam no repo pra
+  quem rodar via Docker Compose local ou subir pra um plano pago depois.
+- Novo env var `POLL_INTERVAL_SECONDS` (`env/.env.example.prod`,
+  `infra/render.yaml`).
+
+**Novo endpoint**: `GET /cities` (`backend/app/api/routes/cities.py` +
+`app/schemas/cities.py`) — lista as cidades do tenant, mesma RLS de sempre.
+
+**Front (`web/src/app/(pages)/page.tsx`)**: fluxo agora é busca → clicar num
+item → tela de comparação. A tela busca `/api/prices?item_id=...&agg=raw` e
+`/api/cities`, pega a linha mais recente por cidade (o backend já devolve
+ordenado por `collected_at DESC` dentro de cada `city_id` — `latestPricePerCity`
+em `web/src/lib/api.ts` só pega a primeira de cada), ordena por preço de
+venda crescente e destaca a cidade mais barata pra comprar e a com melhor
+oferta de compra pra vender. Estado vazio explícito quando ainda não há
+preço coletado pro item (esperado logo depois do deploy, antes do primeiro
+ciclo do coletor rodar). Chaves de tradução novas em
+`web/messages/{pt-BR,en-US}.json`.
+
+**Testes novos** (`backend/tests/test_collector.py`,
+`backend/tests/test_cities.py`) — não executados localmente (sem Postgres/
+Docker neste ambiente), mas seguem exatamente o padrão dos testes de
+integração já existentes (`world`/`db` fixtures) e rodam no `test-api` do
+CI. `test_collector.py` mocka `_fetch_aodp_prices` (sem chamada de rede real
+em teste) e cobre a convenção `code@enchant`, o filtro de zero/zero e o
+item desconhecido ignorado.
+
+**Validado localmente**: `pnpm exec tsc --noEmit` e `pnpm lint` limpos no
+`web/`; `python3 -m py_compile` limpo nos arquivos Python novos/alterados.
+Sem Docker/Postgres neste ambiente pra rodar os testes de integração do
+backend nem o preview completo — verificação final é contra o deploy real
+(Render + Netlify), igual ao turno 10.
+
+**Ainda pendente**: primeiro ciclo do coletor rodar em produção depois do
+deploy (até 5 minutos, `POLL_INTERVAL_SECONDS`) pra comparação ter dado de
+verdade; conferir visualmente no site publicado.
+
 ## Changelog de setup (turno 10 — deploy da API no Render, busca funcionando de ponta a ponta)
 
 **Pedido do turno**: continuar o que o turno 9 deixou pendente — deploy
