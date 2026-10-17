@@ -350,9 +350,25 @@ Sem Docker/Postgres neste ambiente pra rodar os testes de integração do
 backend nem o preview completo — verificação final é contra o deploy real
 (Render + Netlify), igual ao turno 10.
 
-**Ainda pendente**: primeiro ciclo do coletor rodar em produção depois do
-deploy (até 5 minutos, `POLL_INTERVAL_SECONDS`) pra comparação ter dado de
-verdade; conferir visualmente no site publicado.
+**Testado de verdade contra o Render real, achei e corrigi mais um bug**:
+depois do push, o Render fez dois deploys automáticos do commit (Blueprint
+sync + auto-deploy do push em si) e o coletor já tinha rodado — `GET
+/prices?item_id=...` pra "Bolsa Adepta" voltou dados reais de 5 cidades.
+Rodei a web localmente (`pnpm --dir web run dev`, `API_BASE_URL` apontando
+pro Render real via `web/.env.local`, não commitado) pra conferir a tela
+antes de confiar só no JSON cru, e achei um bug de verdade: a AODP devolve
+**5 linhas por cidade por coleta**, uma por nível de qualidade do item
+(1=Normal a 5=Masterpiece), todas com o mesmo `collected_at` — minha função
+`latestPricePerCity` original só pegava "a primeira linha da cidade", que
+com timestamps empatados vira uma qualidade arbitrária dependendo da ordem
+que o Postgres devolveu. Resultado: a tabela podia comparar o preço de
+qualidade 5 de uma cidade com o de qualidade 1 de outra, o que não é
+comparação nenhuma. Corrigido em `web/src/lib/api.ts`: agora filtra sempre
+por qualidade 1 (fallback pra qualquer qualidade só se a cidade não tiver
+nenhum registro de qualidade 1) antes de pegar a mais recente. Validado de
+novo no dev server local contra o Render real, pt-BR e en-US — tabela
+("Bolsa Adepta — T4": Lymhurst 3.496 mais barato, Thetford 2.960 melhor pra
+vender, etc.) bate com os dados crus da API.
 
 ## Changelog de setup (turno 10 — deploy da API no Render, busca funcionando de ponta a ponta)
 

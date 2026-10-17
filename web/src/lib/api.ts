@@ -63,14 +63,32 @@ export async function fetchPrices(itemId: string): Promise<PricesResponse> {
   return response.json();
 }
 
-/** `query_raw_prices` no backend já devolve, por cidade, ordenado por
- * `collected_at DESC` — a primeira linha de cada `city_id` é a mais recente. */
+/** Preço mais recente por cidade, fixando qualidade 1 ("Normal") como
+ * referência da comparação. A AODP devolve uma linha por nível de
+ * qualidade (1 a 5) na mesma coleta, com o mesmo `collected_at` — sem
+ * filtrar por qualidade, o empate de timestamp faria a tabela misturar
+ * preço de item raro (qualidade 5) com normal dependendo da cidade, o que
+ * não é uma comparação "maçã com maçã". Cai pra qualquer qualidade
+ * disponível só se a cidade não tiver nenhum registro de qualidade 1. */
 export function latestPricePerCity(rows: PriceRaw[]): Map<string, PriceRaw> {
-  const latest = new Map<string, PriceRaw>();
+  const byCity = new Map<string, PriceRaw[]>();
   for (const row of rows) {
-    if (!latest.has(row.city_id)) {
-      latest.set(row.city_id, row);
+    const list = byCity.get(row.city_id);
+    if (list) {
+      list.push(row);
+    } else {
+      byCity.set(row.city_id, [row]);
     }
+  }
+
+  const latest = new Map<string, PriceRaw>();
+  for (const [cityId, cityRows] of byCity) {
+    const normalQuality = cityRows.filter((row) => row.quality === 1);
+    const pool = normalQuality.length > 0 ? normalQuality : cityRows;
+    const mostRecent = pool.reduce((newest, row) =>
+      new Date(row.collected_at) > new Date(newest.collected_at) ? row : newest,
+    );
+    latest.set(cityId, mostRecent);
   }
   return latest;
 }
