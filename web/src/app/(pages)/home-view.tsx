@@ -55,9 +55,12 @@ export function HomeView({
     (favoritesOpportunities ?? []).map((trade) => [trade.item_id, trade]),
   );
 
-  const { data: topOpportunities, isLoading: isLoadingTop } = useSWR("top-opportunities", () =>
-    fetchTopOpportunities(5),
-  );
+  const {
+    data: topOpportunities,
+    isLoading: isLoadingTop,
+    isValidating: isRefreshingTop,
+    mutate: refreshTop,
+  } = useSWR("top-opportunities", () => fetchTopOpportunities(5));
 
   const { data: cities } = useSWR("cities", fetchCities);
   const [selectedCityId, setSelectedCityId] = useState("");
@@ -109,9 +112,18 @@ export function HomeView({
       </div>
 
       <section className="flex flex-col gap-3">
-        <div>
-          <h2 className="text-lg font-medium">{t("topOpportunitiesTitle")}</h2>
-          <p className="text-sm text-slate-400">{t("topOpportunitiesSubtitle")}</p>
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <h2 className="text-lg font-medium">{t("topOpportunitiesTitle")}</h2>
+            <p className="text-sm text-slate-400">{t("topOpportunitiesSubtitle")}</p>
+          </div>
+          <button
+            onClick={() => refreshTop()}
+            disabled={isRefreshingTop}
+            className="shrink-0 rounded border border-slate-700 px-3 py-1.5 text-sm text-slate-300 hover:border-emerald-600 hover:text-emerald-400 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {t("refreshButton")}
+          </button>
         </div>
 
         {isLoadingTop && <p className="text-slate-400">...</p>}
@@ -120,6 +132,7 @@ export function HomeView({
           <OpportunityList
             opportunities={topOpportunities}
             emptyMessage={t("topOpportunitiesEmpty")}
+            numbered
             onSelectItem={(itemId) => {
               const trade = topOpportunities.find((o) => o.item_id === itemId);
               if (trade) onSelectItem(itemFromTrade(trade));
@@ -161,6 +174,7 @@ export function HomeView({
           <OpportunityList
             opportunities={bestOpportunities}
             emptyMessage={t("whereAmIEmpty")}
+            numbered
             onSelectItem={(itemId) => {
               const trade = bestOpportunities.find((o) => o.item_id === itemId);
               if (trade) onSelectItem(itemFromTrade(trade));
@@ -206,8 +220,15 @@ export function HomeView({
                     </div>
                     {trade ? (
                       <div className="text-sm text-slate-400">
-                        {t("buyAtLabel", { city: trade.buy_city_name, price: trade.buy_price })} ·{" "}
-                        {t("sellAtLabel", { city: trade.sell_city_name, price: trade.sell_price })}{" "}
+                        {t("buyAtLabel", {
+                          city: trade.buy_city_name,
+                          price: trade.buy_price.toLocaleString(),
+                        })}{" "}
+                        ·{" "}
+                        {t("sellAtLabel", {
+                          city: trade.sell_city_name,
+                          price: trade.sell_price.toLocaleString(),
+                        })}{" "}
                         · {t("profitLabel")}: {trade.profit.toLocaleString()}
                       </div>
                     ) : (
@@ -303,27 +324,36 @@ function OpportunityList({
   opportunities,
   emptyMessage,
   onSelectItem,
+  numbered = false,
 }: {
   opportunities: TradeOpportunity[];
   emptyMessage: string;
   onSelectItem: (itemId: string) => void;
+  numbered?: boolean;
 }) {
+  const t = useTranslations("home");
+
   if (opportunities.length === 0) {
     return <p className="text-slate-400">{emptyMessage}</p>;
   }
   return (
     <ul className="flex flex-col gap-2">
-      {opportunities.map((trade) => (
-        <li key={trade.item_id}>
+      {opportunities.map((trade, index) => (
+        <li key={trade.item_id} className="flex items-start gap-3">
+          {numbered && (
+            <span className="pt-2 text-sm font-medium text-slate-500">{index + 1}.</span>
+          )}
           <button
             onClick={() => onSelectItem(trade.item_id)}
-            className="w-full rounded border border-slate-800 bg-slate-900 px-3 py-2 text-left hover:border-emerald-600"
+            className="flex-1 rounded border border-slate-800 bg-slate-900 px-3 py-2 text-left hover:border-emerald-600"
           >
             <div className="font-medium">{trade.item_name}</div>
             <div className="text-sm text-slate-400">
-              {trade.buy_city_name} ({trade.buy_price.toLocaleString()}) →{" "}
-              {trade.sell_city_name} ({trade.sell_price.toLocaleString()}) — lucro{" "}
-              {trade.profit.toLocaleString()}
+              {t("buyAtLabel", { city: trade.buy_city_name, price: trade.buy_price.toLocaleString() })}
+              {" · "}
+              {t("sellAtLabel", { city: trade.sell_city_name, price: trade.sell_price.toLocaleString() })}
+              {" · "}
+              {t("profitLabel")}: {trade.profit.toLocaleString()}
             </div>
           </button>
         </li>
