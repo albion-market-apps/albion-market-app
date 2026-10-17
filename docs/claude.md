@@ -283,7 +283,78 @@ turno 10); é só um stub por enquanto, não bloqueia o MVP.
 - [ ] Recursos de produção (Neon/Upstash/Render/Vercel) nunca compartilhados
       com outro projeto do mantenedor — pendente (depende do Vercel acima).
 
-## Changelog de setup (turno 11 — comparação de preços entre cidades)
+## Changelog de setup (turno 12 — favoritos, calculadora de lucro, autocomplete e "onde eu estou")
+
+**Pedido do turno**: usuário pediu quatro coisas na sequência, todas em cima
+da comparação de preços do turno 11: (1) lista de até 4 itens favoritos,
+com recomendação de onde comprar/vender; (2) dizer em que cidade está e o
+site recomendar o item mais lucrativo pra comprar ali e revender em outra;
+(3) calculadora — informo quanto vou investir, o site diz quanto lucro dá;
+(4) busca com autocomplete, sem precisar digitar o nome exato.
+
+**Decisão tomada com o usuário**: favoritos ficam só no navegador
+(`localStorage`), não em conta de usuário — mais rápido de construir agora,
+mas a lista não acompanha a pessoa entre dispositivos/navegadores. O schema
+já tem tabela `users` desde o início do projeto mas nenhuma autenticação
+foi implementada; se/quando isso importar de verdade, revisitar.
+
+**Backend novo** (`backend/app/services/opportunities.py` +
+`app/schemas/opportunities.py` + `app/api/routes/opportunities.py`):
+- `latest_quality1_prices`: preço mais recente (qualidade 1, mesma decisão
+  do turno 11) por `(item, cidade)`, via `row_number() OVER (PARTITION BY
+  item_id, city_id ...)`.
+- `best_trade_for_item`: melhor par (cidade de compra, cidade de venda)
+  pra um item — cidade de compra livre (mais barata) ou travada (parâmetro
+  `origin_city_id`, pro caso "onde eu estou"); cidade de venda sempre livre
+  (melhor oferta). Ignora cidades com preço zerado (sem dado, mesma
+  convenção do coletor).
+- `GET /opportunities/favorites?item_ids=...` (até 4 UUIDs): uma
+  oportunidade por item pedido, pra lista de favoritos. Item sem preço
+  coletado ainda simplesmente não aparece na resposta — o front sabe
+  diferenciar porque guarda o item inteiro no favorito, não só o id.
+- `GET /opportunities/best-from-city?city_id=...&limit=5`: ranking dos
+  itens mais lucrativos pra comprar ali agora e vender em outra cidade
+  (só lucro positivo entra, ordenado decrescente) — alimenta "onde eu
+  estou".
+- Lucro é bruto (ignora taxa de mercado do jogo) — aproximação assumida,
+  documentada no próprio módulo.
+- Testes novos (`backend/tests/test_opportunities.py`), mesmo padrão dos
+  outros (`world`/`seed_prices`), cobrindo: melhor par compra/venda,
+  limite de 4 itens (422 acima disso), item sem dado fica fora da resposta,
+  e lucro negativo não entra no ranking de "onde eu estou".
+
+**Front** (`web/src/lib/favorites.ts`, `home-view.tsx`, `item-detail-view.tsx`
+novos; `page.tsx` virou só orquestração de estado):
+- Busca agora é autocomplete de verdade: sugestões aparecem embaixo do
+  campo conforme digita (debounce de 300ms), sem precisar apertar
+  "Buscar" nem digitar o nome exato — reaproveita a mesma busca
+  fuzzy/por alias que `GET /items` já fazia desde o início.
+- Favoritos: botão "☆ Adicionar aos favoritos" / "★ Remover" na tela de
+  detalhe do item (desabilitado com tooltip ao atingir 4); seção
+  "Favoritos" na home lista cada um com cidade de compra/venda e lucro
+  (ou "sem preço coletado ainda" se o item ainda não tem dado).
+- "Onde você está": seletor das 7 cidades + botão → lista as oportunidades
+  mais lucrativas partindo dali, cada uma clicável pra ir direto pra tela
+  de detalhe daquele item.
+- Calculadora de lucro: na tela de detalhe, usa a mesma cidade mais barata
+  pra comprar / melhor pra vender que já aparecem destacadas na tabela —
+  sem chamada de API extra. Campo de investimento → unidades que dá pra
+  comprar (arredondado pra baixo), custo total, retorno, lucro estimado
+  (vermelho se negativo).
+- `TradeOpportunityOut` ganhou `item_tier`/`item_enchant` (não só
+  code/name) — sem isso, clicar numa oportunidade (favoritos ou "onde
+  estou") pra abrir a tela de detalhe perderia essa informação.
+
+**Validado localmente**: `tsc --noEmit` e `pnpm lint` limpos. Rodei a web
+local contra a API real do Render (mesmo truque do turno 11,
+`web/.env.local` não commitado) e testei autocomplete, favoritar/
+desfavoritar, tabela de comparação e a calculadora (matemática bateu: ex.
+100.000 de investimento a 3.496/unidade = 28 unidades, custo 97.888,
+retorno 65.856, lucro -32.032 — item sem lucro nesse momento específico,
+corretamente sinalizado em vermelho). Favoritos e "onde eu estou" deram
+`404` nessa rodada porque as rotas `/opportunities` só existem no código
+local ainda — **esperado**, vou confirmar os dois assim que isso for
+deployado (próxima entrada do changelog).
 
 **Pedido do turno**: usuário lembrou o objetivo real da página — não é só
 buscar item, é **comparar o preço do item entre as cidades**. A home até

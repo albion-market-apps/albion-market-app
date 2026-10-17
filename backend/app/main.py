@@ -7,7 +7,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from prometheus_fastapi_instrumentator import Instrumentator
 
-from app.api.routes import alerts, cities, health, items, prices
+from app.api.routes import alerts, cities, health, items, opportunities, prices
 from app.core.config import get_settings
 from app.core.logging import setup_logging
 from app.services.collector import collect_once
@@ -57,6 +57,7 @@ app.include_router(health.router)
 app.include_router(items.router)
 app.include_router(cities.router)
 app.include_router(prices.router)
+app.include_router(opportunities.router)
 app.include_router(alerts.router)
 
 Instrumentator().instrument(app).expose(app, endpoint="/metrics")

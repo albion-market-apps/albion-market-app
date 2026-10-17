@@ -92,3 +92,55 @@ export function latestPricePerCity(rows: PriceRaw[]): Map<string, PriceRaw> {
   }
   return latest;
 }
+
+export interface TradeOpportunity {
+  item_id: string;
+  item_code: string;
+  item_name: string;
+  item_tier: number;
+  item_enchant: number;
+  buy_city_id: string;
+  buy_city_name: string;
+  buy_price: number;
+  sell_city_id: string;
+  sell_city_name: string;
+  sell_price: number;
+  profit: number;
+  collected_at: string;
+}
+
+export async function fetchFavoritesOpportunities(
+  itemIds: string[],
+): Promise<TradeOpportunity[]> {
+  if (itemIds.length === 0) return [];
+  const response = await fetch(
+    `/api/opportunities/favorites?item_ids=${itemIds.map(encodeURIComponent).join(",")}`,
+  );
+  if (!response.ok) {
+    throw new Error(`Falha ao buscar oportunidades dos favoritos: ${response.status}`);
+  }
+  return response.json();
+}
+
+export function itemFromTrade(trade: TradeOpportunity): ItemResult {
+  return {
+    id: trade.item_id,
+    code: trade.item_code,
+    name: trade.item_name,
+    tier: trade.item_tier,
+    enchant: trade.item_enchant,
+  };
+}
+
+export async function fetchBestFromCity(
+  cityId: string,
+  limit = 5,
+): Promise<TradeOpportunity[]> {
+  const response = await fetch(
+    `/api/opportunities/best-from-city?city_id=${encodeURIComponent(cityId)}&limit=${limit}`,
+  );
+  if (!response.ok) {
+    throw new Error(`Falha ao buscar melhores oportunidades: ${response.status}`);
+  }
+  return response.json();
+}
