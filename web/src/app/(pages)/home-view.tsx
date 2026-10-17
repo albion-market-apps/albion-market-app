@@ -9,6 +9,7 @@ import {
   fetchFavoritesOpportunities,
   fetchItems,
   fetchRefiningAtCity,
+  fetchTopOpportunities,
   itemFromTrade,
   type ItemResult,
   type RefiningComparison,
@@ -52,6 +53,10 @@ export function HomeView({
   );
   const opportunityByItemId = new Map(
     (favoritesOpportunities ?? []).map((trade) => [trade.item_id, trade]),
+  );
+
+  const { data: topOpportunities, isLoading: isLoadingTop } = useSWR("top-opportunities", () =>
+    fetchTopOpportunities(5),
   );
 
   const { data: cities } = useSWR("cities", fetchCities);
@@ -102,6 +107,26 @@ export function HomeView({
           )}
         </div>
       </div>
+
+      <section className="flex flex-col gap-3">
+        <div>
+          <h2 className="text-lg font-medium">{t("topOpportunitiesTitle")}</h2>
+          <p className="text-sm text-slate-400">{t("topOpportunitiesSubtitle")}</p>
+        </div>
+
+        {isLoadingTop && <p className="text-slate-400">...</p>}
+
+        {topOpportunities && (
+          <OpportunityList
+            opportunities={topOpportunities}
+            emptyMessage={t("topOpportunitiesEmpty")}
+            onSelectItem={(itemId) => {
+              const trade = topOpportunities.find((o) => o.item_id === itemId);
+              if (trade) onSelectItem(itemFromTrade(trade));
+            }}
+          />
+        )}
+      </section>
 
       <section className="flex flex-col gap-3">
         <div>

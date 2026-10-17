@@ -283,6 +283,32 @@ turno 10); é só um stub por enquanto, não bloqueia o MVP.
 - [ ] Recursos de produção (Neon/Upstash/Render/Vercel) nunca compartilhados
       com outro projeto do mantenedor — pendente (depende do Vercel acima).
 
+## Changelog de setup (turno 15 — "Top 5 do mercado", sem precisar escolher cidade)
+
+**Pedido do turno**: usuário propôs verificar todos os itens em todas as
+cidades (preço de compra barato + preço de venda caro, sem travar numa
+cidade de origem) e listar os 5 mais rentáveis, atualizando "de hora em
+hora".
+
+**Decisão tomada com o usuário**: perguntei se dava pra calcular na hora
+(reflete o último preço do coletor, sem atraso) em vez de uma lista
+cacheada fixa de 1h — catálogo pequeno o bastante pra isso custar bem
+menos que 1s. Usuário confirmou a opção "sempre atualizado na hora". Não
+foi criado nenhum scheduler/cache novo — mais simples de manter no Render
+free (que já não tem Background Worker, ver turno 10) e mais preciso.
+
+- `backend/app/services/opportunities.py`: `best_trades_from_city` e a
+  função nova `best_trades_global` agora compartilham `_rank_opportunities`
+  (mesma lógica, só muda se `origin_city_id` trava a cidade de compra ou
+  fica livre pros dois lados).
+- `GET /opportunities/top?limit=5` (novo): ranking do catálogo inteiro,
+  cidade de compra e venda livres.
+- Front: nova seção "Top 5 do mercado agora" no topo da home, carrega
+  sozinha ao abrir a página (sem precisar escolher cidade, diferente de
+  "Onde você está" que exige a cidade antes).
+- Teste novo (`test_top_opportunities_ranks_whole_catalog_without_city_filter`,
+  `test_top_opportunities_respects_limit`).
+
 ## Changelog de setup (turno 14 — bug real: recomendação mandava comprar e vender na mesma cidade)
 
 **Pedido do turno**: usuário mandou print da Calculadora de Lucro pro

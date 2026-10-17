@@ -145,6 +145,19 @@ export async function fetchBestFromCity(
   return response.json();
 }
 
+/** Top N itens mais lucrativos do catálogo inteiro, sem travar cidade de
+ * compra nem de venda — calculado na hora a cada chamada a partir do
+ * último preço que o coletor trouxe, não uma lista cacheada de hora em
+ * hora (decisão tomada com o usuário: o catálogo é pequeno o bastante pra
+ * isso custar bem menos que 1s no backend). */
+export async function fetchTopOpportunities(limit = 5): Promise<TradeOpportunity[]> {
+  const response = await fetch(`/api/opportunities/top?limit=${limit}`);
+  if (!response.ok) {
+    throw new Error(`Falha ao buscar top oportunidades: ${response.status}`);
+  }
+  return response.json();
+}
+
 export interface RefiningComparison {
   tier: number;
   raw_item_id: string;

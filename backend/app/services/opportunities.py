@@ -140,12 +140,9 @@ def best_trades_for_items(
     return opportunities
 
 
-def best_trades_from_city(
-    db: Session, tenant_id: UUID, origin_city_id: UUID, limit: int = 5
+def _rank_opportunities(
+    db: Session, tenant_id: UUID, origin_city_id: UUID | None, limit: int
 ) -> list[TradeOpportunity]:
-    """Ranking dos itens mais lucrativos pra comprar em `origin_city_id`
-    agora e vender em outra cidade — todo o catálogo do tenant com preço
-    coletado, ordenado por lucro decrescente."""
     prices = latest_quality1_prices(db, tenant_id)
     opportunities = []
     for item_id, prices_by_city in prices.items():
@@ -154,3 +151,23 @@ def best_trades_from_city(
             opportunities.append(trade)
     opportunities.sort(key=lambda trade: trade.profit, reverse=True)
     return opportunities[:limit]
+
+
+def best_trades_from_city(
+    db: Session, tenant_id: UUID, origin_city_id: UUID, limit: int = 5
+) -> list[TradeOpportunity]:
+    """Ranking dos itens mais lucrativos pra comprar em `origin_city_id`
+    agora e vender em outra cidade — todo o catálogo do tenant com preço
+    coletado, ordenado por lucro decrescente."""
+    return _rank_opportunities(db, tenant_id, origin_city_id, limit)
+
+
+def best_trades_global(db: Session, tenant_id: UUID, limit: int = 5) -> list[TradeOpportunity]:
+    """Ranking dos itens mais lucrativos do catálogo inteiro, cidade de
+    compra e de venda livres (sem travar "onde você está") — calculado na
+    hora a partir do preço mais recente que o coletor já trouxe (a cada
+    ~5min, ver `POLL_INTERVAL_SECONDS`), não uma lista pré-calculada e
+    cacheada por hora: o catálogo é pequeno o bastante (algumas centenas de
+    itens × até 7 cidades) pra isso custar bem menos que 1s, então não tem
+    motivo pra servir um dado mais velho do que o necessário."""
+    return _rank_opportunities(db, tenant_id, None, limit)

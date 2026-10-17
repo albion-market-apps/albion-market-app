@@ -161,3 +161,25 @@ def test_best_trade_never_buys_and_sells_in_the_same_city(
     assert trade["sell_city_id"] == str(world["city_a"])
     assert trade["sell_price"] == 200
     assert trade["profit"] == 50
+
+
+def test_top_opportunities_ranks_whole_catalog_without_city_filter(
+    client: TestClient, db: Session, world: dict
+) -> None:
+    _seed_cheap_and_expensive_city(db, world)
+
+    response = client.get("/opportunities/top", headers=_headers())
+    assert response.status_code == 200
+    body = response.json()
+    assert len(body) == 1
+    assert body[0]["buy_city_id"] == str(world["city_a"])
+    assert body[0]["sell_city_id"] == str(world["city_a2"])
+    assert body[0]["profit"] == 790
+
+
+def test_top_opportunities_respects_limit(client: TestClient, db: Session, world: dict) -> None:
+    _seed_cheap_and_expensive_city(db, world)
+
+    response = client.get("/opportunities/top", params={"limit": 0}, headers=_headers())
+    # limit tem ge=1 no schema — 0 é inválido, não "nenhum resultado".
+    assert response.status_code == 422

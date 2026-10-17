@@ -12,6 +12,7 @@ from app.services.opportunities import (
     TradeOpportunity,
     best_trades_for_items,
     best_trades_from_city,
+    best_trades_global,
 )
 
 router = APIRouter(prefix="/opportunities", tags=["opportunities"])
@@ -113,4 +114,18 @@ def best_from_city(
     vender em outra cidade — todo o catálogo do tenant com preço coletado,
     ordenado por lucro decrescente (só lucro positivo entra)."""
     trades = best_trades_from_city(db, tenant_id, city_id, limit=limit)
+    return _enrich(db, tenant_id, trades)
+
+
+@router.get("/top", response_model=list[TradeOpportunityOut])
+def top_opportunities(
+    limit: int = Query(default=5, ge=1, le=20),
+    db: Session = Depends(get_tenant_db),
+    tenant_id: UUID = Depends(get_current_tenant_id),
+) -> list[TradeOpportunityOut]:
+    """Ranking dos itens mais lucrativos do catálogo inteiro, sem travar
+    cidade de compra nem de venda — "o que está mais lucrativo agora,
+    onde quer que seja". Calculado na hora a cada chamada (não
+    pré-calculado nem cacheado por hora — ver `best_trades_global`)."""
+    trades = best_trades_global(db, tenant_id, limit=limit)
     return _enrich(db, tenant_id, trades)
