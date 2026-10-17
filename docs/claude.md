@@ -353,8 +353,20 @@ desfavoritar, tabela de comparação e a calculadora (matemática bateu: ex.
 retorno 65.856, lucro -32.032 — item sem lucro nesse momento específico,
 corretamente sinalizado em vermelho). Favoritos e "onde eu estou" deram
 `404` nessa rodada porque as rotas `/opportunities` só existem no código
-local ainda — **esperado**, vou confirmar os dois assim que isso for
-deployado (próxima entrada do changelog).
+local ainda.
+
+**Confirmado no deploy real** (Render + Netlify, depois do push): as duas
+rotas novas responderam certo assim que o deploy da API terminou —
+`/opportunities/favorites` devolveu o par compra/venda real da Bolsa
+Adepta, `/opportunities/best-from-city` o ranking a partir de Lymhurst.
+Testei o site publicado de ponta a ponta de novo (não só a API crua):
+autocomplete achou "Couro de Lobo" digitando só "couro", favoritei o item,
+voltei pra home e a seção Favoritos mostrou "Compre em Lymhurst por 112 ·
+Venda em Thetford por 125 · Lucro: 13" — persistiu certo no localStorage
+depois de navegar entre as telas. "Onde você está" com Lymhurst selecionado
+recomendou o mesmo Couro de Lobo. As quatro features do pedido do usuário
+(favoritos, calculadora, autocomplete, "onde eu estou") estão no ar e
+funcionando com dado real.
 
 **Pedido do turno**: usuário lembrou o objetivo real da página — não é só
 buscar item, é **comparar o preço do item entre as cidades**. A home até
